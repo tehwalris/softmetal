@@ -35,7 +35,7 @@ message FlashingConfig {
 
 message FlashingCommand {
   message BeginFlashing {
-    FlashingConfig config;
+    FlashingConfig config = 1;
   }
   message CancelFlashing { }
   message PowerControl {
@@ -49,8 +49,8 @@ message FlashingCommand {
 
   oneof command {
     BeginFlashing begin_flashing = 1;
-    CancelFlashing begin_flashing = 2;
-    PowerControl begin_flashing = 3;
+    CancelFlashing cancel_flashing = 2;
+    PowerControl power_control = 3;
   }
 }
 
@@ -66,10 +66,10 @@ message FlashingStatusUpdate {
     State state = 1;
   }
   message Progress {
-    float progress;
+    float progress = 1;
   }
   message GenericLog {
-    string log;
+    string log = 1;
   }
   message FatalError {
     enum ErrorKind {
@@ -84,13 +84,13 @@ message FlashingStatusUpdate {
       POWER_CONTROL_FAILED = 8;
     }
 
-    ErrorKind kind;
+    ErrorKind kind = 1;
   }
 
   oneof update {
     StateChange state_change = 1;
     Progress progress = 2;
     GenericLog generic_log = 3;
-    FatalErorr fatal_error = 4;
+    FatalError fatal_error = 4;
   }
 }
