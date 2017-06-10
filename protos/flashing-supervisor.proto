@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package softmetal;
+
+service FlashingSupervisor {
+  rpc Supervise (stream FlashingStatusUpdate) returns (stream FlashingCommand);
+}
+
+message FlashingConfig {
+  message BootEntry {
+    string efi_disk = 1;
+    uint32 efi_partition = 2;
+    string label = 3;
+    string loader_path = 4;
+  }
+  message ImageConfig {
+    string url = 1;
+    bool auto_fill = 2;
+    BootEntry boot_entry = 3;
+  }
+  message Disk {
+    string name = 1;
+    string serial = 2;
+  }
+  message Partition {
+    string part_uuid = 1;
+    uint64 size = 2;
+    string gpt_type = 3;
+  }
+
+  ImageConfig image_config = 1;
+  Disk target_disk = 2;
+  repeated Partition persistent_partitions = 3;
+}
+
+message FlashingCommand {
+  message BeginFlashing {
+    FlashingConfig config;
+  }
+  message CancelFlashing { }
+  message PowerControl {
+    enum Type {
+      REBOOT = 0;
+      POWER_OFF = 1;
+    }
+
+    Type type = 1;
+  }
+
+  oneof command {
+    BeginFlashing begin_flashing = 1;
+    CancelFlashing begin_flashing = 2;
+    PowerControl begin_flashing = 3;
+  }
+}
+
+message FlashingStatusUpdate {
+  message StateChange {
+    enum State {
+      READY_IDLE = 0;
+      STARTED = 1;
+      COMPLETE_SUCCEDED = 2;
+      COMPLETE_FAILED = 3;
+    }
+
+    State state = 1;
+  }
+  message Progress {
+    float progress;
+  }
+  message GenericLog {
+    string log;
+  }
+  message FatalError {
+    enum ErrorKind {
+      OTHER = 0;
+      DISK_NOT_FOUND = 1;
+      FLASHING_NOT_SAFE = 2;
+      IMAGE_LOAD_FAILED = 3;
+      IMAGE_WRITE_FAILED = 4;
+      IMAGE_INCOMPATIBLE = 5;
+      BOOT_SETUP_FAILED = 6;
+      PARTITIONNING_FAILED = 7;
+      POWER_CONTROL_FAILED = 8;
+    }
+
+    ErrorKind kind;
+  }
+
+  oneof update {
+    StateChange state_change = 1;
+    Progress progress = 2;
+    GenericLog generic_log = 3;
+    FatalErorr fatal_error = 4;
+  }
+}
