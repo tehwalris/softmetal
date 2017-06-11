@@ -10,6 +10,7 @@ before_script:
   - mkdir -p $GO_PROJECT_PATH
   - cp -r $CI_PROJECT_DIR $GO_PROJECT_PATH
   - cd $GO_PROJECT_PATH
+  - ls -la
 
 test:
   stage: test
