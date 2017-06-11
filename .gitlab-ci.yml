@@ -1,0 +1,12 @@
+image: golang:1.8-alpine
+
+before_script:
+  - go get github.com/tools/godep
+  - cp -r $CI_PROJECT_DIR /go/src/git.dolansoft.org/$CI_PROJECT_PATH
+  - cd /go/src/git.dolansoft.org/$CI_PROJECT_PATH
+
+test:
+  stage: test
+  script:
+    - godep restore
+    - go test -v ./...
