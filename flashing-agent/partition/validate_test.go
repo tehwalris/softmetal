@@ -210,5 +210,3 @@ func TestAssertGptValid(t *testing.T) {
 		}
 	}
 }
-
-// Validate that all matchesid are also matches
