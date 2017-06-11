@@ -19,3 +19,9 @@ func Matches(
 		strings.ToLower(real.Type.String()) == strings.ToLower(search.GptType) &&
 		sizeBytes(real, sectorSize) == search.Size
 }
+
+func MatchesId(
+	real *gpt.Partition, partUuid *string,
+) bool {
+	return strings.ToLower(real.Id.String()) == strings.ToLower(*partUuid)
+}
