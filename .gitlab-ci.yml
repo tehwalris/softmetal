@@ -9,7 +9,7 @@ before_script:
   - go get github.com/tools/godep
   - mkdir -p $GO_PROJECT_PATH
   - rmdir $GO_PROJECT_PATH
-  - cp -rT $CI_PROJECT_DIR $GO_PROJECT_PATH
+  - cp -r $CI_PROJECT_DIR $GO_PROJECT_PATH
   - cd $GO_PROJECT_PATH
 
 test:
