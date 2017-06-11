@@ -6,7 +6,8 @@ variables:
 before_script:
   - echo $GO_PROJECT_PATH
   - apk update
-  - apk add git protoc
+  - apk add git
+  - apk add protoc
   - go get github.com/tools/godep
   - mkdir -p $GO_PROJECT_PATH
   - rmdir $GO_PROJECT_PATH
