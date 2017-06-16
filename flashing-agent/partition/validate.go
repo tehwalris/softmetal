@@ -8,6 +8,9 @@ import (
 	"github.com/rekby/gpt"
 )
 
+var zeroUuid = gpt.Guid{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+var zeroPartType = gpt.PartType(zeroUuid)
+
 func AssertGptCompatible(disk, img *gpt.Table) error {
 	if disk.SectorSize != img.SectorSize {
 		return errors.New("Mismated sector sizes")
@@ -39,6 +42,9 @@ func assertValidLayout(table *gpt.Table) error {
 		return partitions[i].FirstLBA < partitions[j].FirstLBA
 	})
 	for i, p := range partitions {
+		if p.IsEmpty() {
+			continue
+		}
 		if !isInsideTable(&p, table) || p.FirstLBA > p.LastLBA {
 			return errors.New("Partition has invalid first/last LBA.")
 		}
@@ -52,6 +58,9 @@ func assertValidLayout(table *gpt.Table) error {
 func assertUniqueIds(partitions []gpt.Partition) error {
 	ids := make(map[gpt.Guid]bool)
 	for _, p := range partitions {
+		if p.IsEmpty() {
+			continue
+		}
 		if _, exists := ids[p.Id]; exists {
 			return fmt.Errorf("Partition id %v not unique.", p.Id.String())
 		}

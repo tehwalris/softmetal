@@ -48,18 +48,23 @@ func FindSpace(
 
 func calculateDiskRanges(table *gpt.Table) []diskRange {
 	diskRanges := make([]diskRange, 0, 2*len(table.Partitions)+1)
-	if len(table.Partitions) == 0 {
+
+	sortedPartitions := make([]*gpt.Partition, 0, len(table.Partitions))
+	var j = 0
+	for i, _ := range table.Partitions {
+		if !table.Partitions[i].IsEmpty() {
+			sortedPartitions = sortedPartitions[0 : j+1]
+			sortedPartitions[j] = &table.Partitions[i]
+			j += 1
+		}
+	}
+	if len(sortedPartitions) == 0 {
 		diskRanges = append(diskRanges, diskRange{
 			FirstLBA:  table.Header.FirstUsableLBA,
 			LastLBA:   table.Header.LastUsableLBA,
 			Partition: nil,
 		})
 		return diskRanges
-	}
-
-	sortedPartitions := make([]*gpt.Partition, len(table.Partitions))
-	for i, _ := range table.Partitions {
-		sortedPartitions[i] = &table.Partitions[i]
 	}
 	sort.Slice(sortedPartitions, func(i, j int) bool {
 		return sortedPartitions[i].FirstLBA < sortedPartitions[j].FirstLBA
