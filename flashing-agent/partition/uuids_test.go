@@ -17,3 +17,10 @@ var testUuidStrings = []string{
 	"7c55cc60-c5e0-45f5-97a1-202cbd8a9ae8",
 	"232f634e-26fe-4488-893c-3126aa2db53b",
 }
+
+func matchesEnough(a *gpt.Partition, b *gpt.Partition) bool {
+	return a.FirstLBA == b.FirstLBA &&
+		a.LastLBA == b.LastLBA &&
+		a.Id == b.Id &&
+		a.Type == b.Type
+}

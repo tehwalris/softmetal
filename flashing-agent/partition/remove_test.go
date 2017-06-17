@@ -6,13 +6,6 @@ import (
 	"github.com/rekby/gpt"
 )
 
-func matchesEnough(a *gpt.Partition, b *gpt.Partition) bool {
-	return a.FirstLBA == b.FirstLBA &&
-		a.LastLBA == b.LastLBA &&
-		a.Id == b.Id &&
-		a.Type == b.Type
-}
-
 func TestRemove(t *testing.T) {
 	var cases = []struct {
 		table        gpt.Table
