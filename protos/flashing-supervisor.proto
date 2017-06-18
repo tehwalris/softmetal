@@ -18,10 +18,6 @@ message FlashingConfig {
     bool auto_fill = 2;
     BootEntry boot_entry = 3;
   }
-  message Disk {
-    string name = 1;
-    string serial = 2;
-  }
   message Partition {
     string part_uuid = 1;
     uint64 size = 2;
@@ -29,7 +25,7 @@ message FlashingConfig {
   }
 
   ImageConfig image_config = 1;
-  Disk target_disk = 2;
+  string target_disk_combined_serial = 2;
   repeated Partition persistent_partitions = 3;
 }
 
