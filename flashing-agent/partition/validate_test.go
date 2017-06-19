@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	pb "git.dolansoft.org/philippe/softmetal/pb"
+
 	"github.com/rekby/gpt"
 )
 
@@ -248,8 +250,123 @@ func TestAssertGptValid(t *testing.T) {
 			},
 		}, true, "unique"},
 	}
+
 	for i, c := range cases {
 		e := AssertGptValid(&c.table)
+		if c.shouldFail {
+			if e == nil {
+				t.Errorf("Test case %v: Excpected error, but none occured", i)
+			} else if !strings.Contains(e.Error(), c.shouldContain) {
+				t.Errorf("Test case %v: Excpected error to contain %v, but it didn't."+
+					"Instead error was: %v", i, c.shouldContain, e)
+			}
+		} else {
+			if e != nil {
+				t.Errorf("Test case %v: Excpected no error, but got: %v", i, e)
+			}
+		}
+	}
+}
+
+func TestAssertExactMatchIfExists(t *testing.T) {
+	var cases = []struct {
+		table         gpt.Table
+		target        pb.FlashingConfig_Partition
+		shouldFail    bool
+		shouldContain string
+	}{
+		{gpt.Table{
+			SectorSize: 512,
+			Partitions: []gpt.Partition{},
+		}, pb.FlashingConfig_Partition{
+			PartUuid: testUuidStrings[1],
+			GptType:  testUuidStrings[1],
+			Size:     10,
+		}, false, ""},
+
+		{gpt.Table{
+			SectorSize: 512,
+			Partitions: []gpt.Partition{
+				{FirstLBA: 30, LastLBA: 40,
+					Id: testUuids[2], Type: gpt.PartType(testUuids[1])},
+			},
+		}, pb.FlashingConfig_Partition{
+			PartUuid: testUuidStrings[1],
+			GptType:  testUuidStrings[1],
+			Size:     10,
+		}, false, ""},
+
+		{gpt.Table{
+			SectorSize: 512,
+			Partitions: []gpt.Partition{
+				{FirstLBA: 30, LastLBA: 40,
+					Id: testUuids[1], Type: gpt.PartType(testUuids[1])},
+			},
+		}, pb.FlashingConfig_Partition{
+			PartUuid: testUuidStrings[1],
+			GptType:  testUuidStrings[1],
+			Size:     5120,
+		}, true, "not as expected"},
+
+		{gpt.Table{
+			SectorSize: 512,
+			Partitions: []gpt.Partition{
+				{FirstLBA: 31, LastLBA: 40,
+					Id: testUuids[1], Type: gpt.PartType(testUuids[1])},
+			},
+		}, pb.FlashingConfig_Partition{
+			PartUuid: testUuidStrings[1],
+			GptType:  testUuidStrings[1],
+			Size:     5120,
+		}, false, ""},
+
+		{gpt.Table{
+			SectorSize: 512,
+			Partitions: []gpt.Partition{
+				{FirstLBA: 31, LastLBA: 40,
+					Id: testUuids[1], Type: gpt.PartType(testUuids[2])},
+			},
+		}, pb.FlashingConfig_Partition{
+			PartUuid: testUuidStrings[1],
+			GptType:  testUuidStrings[1],
+			Size:     5120,
+		}, true, "not as expected"},
+
+		{gpt.Table{
+			SectorSize: 512,
+			Partitions: []gpt.Partition{
+				{FirstLBA: 0, LastLBA: 0,
+					Id: testUuids[0], Type: gpt.PartType(testUuids[0])},
+				{FirstLBA: 31, LastLBA: 40,
+					Id: testUuids[1], Type: gpt.PartType(testUuids[2])},
+				{FirstLBA: 0, LastLBA: 0,
+					Id: testUuids[0], Type: gpt.PartType(testUuids[0])},
+			},
+		}, pb.FlashingConfig_Partition{
+			PartUuid: testUuidStrings[1],
+			GptType:  testUuidStrings[1],
+			Size:     5120,
+		}, true, "not as expected"},
+
+		{gpt.Table{
+			SectorSize: 512,
+			Partitions: []gpt.Partition{
+				{FirstLBA: 0, LastLBA: 0,
+					Id: testUuids[0], Type: gpt.PartType(testUuids[0])},
+				{FirstLBA: 31, LastLBA: 40,
+					Id: testUuids[1], Type: gpt.PartType(testUuids[2])},
+				{FirstLBA: 0, LastLBA: 0,
+					Id: testUuids[0], Type: gpt.PartType(testUuids[0])},
+			},
+		}, pb.FlashingConfig_Partition{
+			PartUuid: testUuidStrings[3],
+			GptType:  testUuidStrings[3],
+			Size:     5120,
+		}, false, ""},
+	}
+
+	for i, c := range cases {
+		e := AssertExactMatchIfExists(&c.table, &c.target)
 		if c.shouldFail {
 			if e == nil {
 				t.Errorf("Test case %v: Excpected error, but none occured", i)

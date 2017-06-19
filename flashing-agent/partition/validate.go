@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sort"
 
+	pb "git.dolansoft.org/philippe/softmetal/pb"
+
 	"github.com/rekby/gpt"
 )
 
@@ -65,6 +67,21 @@ func assertUniqueIds(partitions []gpt.Partition) error {
 			return fmt.Errorf("Partition id %v not unique.", p.Id.String())
 		}
 		ids[p.Id] = true
+	}
+	return nil
+}
+
+func AssertExactMatchIfExists(table *gpt.Table, target *pb.FlashingConfig_Partition) error {
+	for i, _ := range table.Partitions {
+		p := &table.Partitions[i]
+		if !p.IsEmpty() &&
+			MatchesId(p, &target.PartUuid) &&
+			!Matches(p, target, table.SectorSize) {
+			return fmt.Errorf(
+				"Partition %v found, but it's type and/or size are not as expected.",
+				target.PartUuid,
+			)
+		}
 	}
 	return nil
 }

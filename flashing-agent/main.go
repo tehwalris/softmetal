@@ -13,6 +13,20 @@ func check(e error) {
 }
 
 func main() {
+	// ghw.Block()
+	// FindDisk(block, target_disk_combined_serial)
+	// LoadGpt(disk)
+
+	// validate disk and image gpts
+	// validate inputs (persistent partitions, ...) (!)
+	// ensure no id only matches
+	// remove not persistent
+	// add persistent if not exists (!)
+	// add all partitions
+
+	// write gpt
+	// ...
+
 	block, e := ghw.Block()
 	check(e)
 
