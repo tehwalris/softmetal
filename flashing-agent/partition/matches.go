@@ -25,3 +25,15 @@ func MatchesId(
 ) bool {
 	return strings.ToLower(real.Id.String()) == strings.ToLower(*partUuid)
 }
+
+func ContainsId(
+	partitions []gpt.Partition, partUuid *string,
+) bool {
+	for i, _ := range partitions {
+		p := &partitions[i]
+		if !p.IsEmpty() && MatchesId(p, partUuid) {
+			return true
+		}
+	}
+	return false
+}

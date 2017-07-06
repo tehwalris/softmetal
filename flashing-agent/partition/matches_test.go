@@ -99,3 +99,30 @@ func TestMatches(t *testing.T) {
 		}
 	}
 }
+
+func TestContainsId(t *testing.T) {
+	var testCases = []struct {
+		partitions []gpt.Partition
+		targetId   string
+		shouldFind bool
+	}{
+		{[]gpt.Partition{}, testUuidStrings[1], false},
+		{[]gpt.Partition{
+			{Id: testUuids[1], Type: gpt.PartType(testUuids[2])},
+		}, testUuidStrings[1], true},
+		{[]gpt.Partition{
+			{Id: testUuids[1], Type: gpt.PartType(testUuids[0])},
+			{Id: testUuids[2], Type: gpt.PartType(testUuids[2])},
+		}, testUuidStrings[1], false},
+	}
+
+	for i, c := range testCases {
+		found := ContainsId(c.partitions, &c.targetId)
+		if found && !c.shouldFind {
+			t.Errorf("Test case %v: Found unexpected matching partition.", i)
+		}
+		if !found && c.shouldFind {
+			t.Errorf("Test case %v: Expected to find a matching partition, but didn't.", i)
+		}
+	}
+}
