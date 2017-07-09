@@ -15,7 +15,7 @@ func AssertExistingPartitionsMatchExact(
 		for j, _ := range table.Partitions {
 			a := &table.Partitions[j]
 			if MatchesId(a, &e.PartUuid) {
-				if !Matches(a, e, table.SectorSize) {
+				if !a.IsEmpty() && !Matches(a, e, table.SectorSize) {
 					return fmt.Errorf(
 						"Partition %v exists, but does not have expected type or size.",
 						e.PartUuid,

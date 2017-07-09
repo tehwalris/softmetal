@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"git.dolansoft.org/philippe/softmetal/flashing-agent/partition"
 	pb "git.dolansoft.org/philippe/softmetal/pb"
 	"github.com/rekby/gpt"
@@ -27,9 +29,18 @@ func MergeGpt(
 	if e := partition.AssertGptValid(imageGpt); e != nil {
 		return e
 	}
-	// TODO validate inputs (persistent partitions, ...) (!)
-	//	- persistent have unique ids, nozero sizes, ok types
-	//  - imageGpt does not contain persistent
+	if e := partition.AssertPersistentValid(persistent); e != nil {
+		return e
+	}
+	for i, _ := range persistent {
+		id := &persistent[i].PartUuid
+		if partition.ContainsId(imageGpt.Partitions, id) {
+			return fmt.Errorf(
+				"Partition %v in image conflicts with a persistent partition.",
+				id,
+			)
+		}
+	}
 	if e := partition.AssertExistingPartitionsMatchExact(diskGpt, persistent); e != nil {
 		return e
 	}
@@ -40,7 +51,7 @@ func MergeGpt(
 	}
 	for _, p := range imageGpt.Partitions {
 		if !p.IsEmpty() {
-			if e := partition.Add(diskGpt, &p); e != nil {
+			if e := partition.AddFindSpace(diskGpt, &p, partition.Start); e != nil {
 				return e
 			}
 		}

@@ -83,7 +83,7 @@ func calculateDiskRanges(table *gpt.Table) []diskRange {
 			LastLBA:   p.LastLBA,
 			Partition: p,
 		})
-		if i+1 == len(sortedPartitions) && table.Header.LastUsableLBA > p.LastLBA {
+		if i+1 == len(sortedPartitions) || table.Header.LastUsableLBA <= p.LastLBA {
 			diskRanges = append(diskRanges, diskRange{
 				FirstLBA:  p.LastLBA + 1,
 				LastLBA:   table.Header.LastUsableLBA,

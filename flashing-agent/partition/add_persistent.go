@@ -1,8 +1,6 @@
 package partition
 
 import (
-	"fmt"
-
 	pb "git.dolansoft.org/philippe/softmetal/pb"
 	"github.com/rekby/gpt"
 )
@@ -40,18 +38,13 @@ func convertPartition(p *pb.FlashingConfig_Partition) (*gpt.Partition, error) {
 func AddPersistentIfMissing(table *gpt.Table, p *pb.FlashingConfig_Partition) error {
 	if !ContainsId(table.Partitions, &p.PartUuid) {
 		size := partitionSectorSize(p, table.SectorSize)
-		firstLBA, lastLBA, found := FindSpace(table, size, End)
-		if !found {
-			return fmt.Errorf("Could not find %v blocks for partition %v",
-				size, p.PartUuid)
-		}
 		diskP, e := convertPartition(p)
 		if e != nil {
 			return e
 		}
-		diskP.FirstLBA = firstLBA
-		diskP.LastLBA = lastLBA
-		if e := Add(table, diskP); e != nil {
+		diskP.FirstLBA = 0
+		diskP.LastLBA = size - 1
+		if e := AddFindSpace(table, diskP, End); e != nil {
 			return e
 		}
 	}

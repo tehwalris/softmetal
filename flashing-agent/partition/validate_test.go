@@ -161,6 +161,16 @@ func TestAssertGptValid(t *testing.T) {
 					Id: testUuids[2], Type: gpt.PartType(testUuids[1])},
 			},
 		}, true, "overlap"},
+		{gpt.Table{ // Just overlapping, reversed
+			Header:     typicalHeader,
+			SectorSize: 512,
+			Partitions: []gpt.Partition{
+				{FirstLBA: 40, LastLBA: 50,
+					Id: testUuids[2], Type: gpt.PartType(testUuids[1])},
+				{FirstLBA: 30, LastLBA: 40,
+					Id: testUuids[1], Type: gpt.PartType(testUuids[1])},
+			},
+		}, true, "overlap"},
 		{gpt.Table{ // Overlapping, but one "empty" partition
 			Header:     typicalHeader,
 			SectorSize: 512,
@@ -169,6 +179,36 @@ func TestAssertGptValid(t *testing.T) {
 					Id: testUuids[1], Type: gpt.PartType(testUuids[1])},
 				{FirstLBA: 40, LastLBA: 50,
 					Id: testUuids[2], Type: gpt.PartType(testUuids[0])},
+			},
+		}, false, ""},
+		{gpt.Table{ // Overlapping, but one "empty" partition, reversed order
+			Header:     typicalHeader,
+			SectorSize: 512,
+			Partitions: []gpt.Partition{
+				{FirstLBA: 40, LastLBA: 50,
+					Id: testUuids[2], Type: gpt.PartType(testUuids[0])},
+				{FirstLBA: 30, LastLBA: 40,
+					Id: testUuids[1], Type: gpt.PartType(testUuids[1])},
+			},
+		}, false, ""},
+		{gpt.Table{ // Overlapping, exact overlap, one "empty" partition
+			Header:     typicalHeader,
+			SectorSize: 512,
+			Partitions: []gpt.Partition{
+				{FirstLBA: 35, LastLBA: 35,
+					Id: testUuids[2], Type: gpt.PartType(testUuids[0])},
+				{FirstLBA: 35, LastLBA: 35,
+					Id: testUuids[1], Type: gpt.PartType(testUuids[1])},
+			},
+		}, false, ""},
+		{gpt.Table{ // Overlapping, exact overlap, one "empty" partition, reversed
+			Header:     typicalHeader,
+			SectorSize: 512,
+			Partitions: []gpt.Partition{
+				{FirstLBA: 35, LastLBA: 35,
+					Id: testUuids[2], Type: gpt.PartType(testUuids[1])},
+				{FirstLBA: 35, LastLBA: 35,
+					Id: testUuids[1], Type: gpt.PartType(testUuids[0])},
 			},
 		}, false, ""},
 		{gpt.Table{ // Overlapping, unordered
@@ -367,6 +407,52 @@ func TestAssertExactMatchIfExists(t *testing.T) {
 
 	for i, c := range cases {
 		e := AssertExactMatchIfExists(&c.table, &c.target)
+		if c.shouldFail {
+			if e == nil {
+				t.Errorf("Test case %v: Excpected error, but none occured", i)
+			} else if !strings.Contains(e.Error(), c.shouldContain) {
+				t.Errorf("Test case %v: Excpected error to contain %v, but it didn't."+
+					"Instead error was: %v", i, c.shouldContain, e)
+			}
+		} else {
+			if e != nil {
+				t.Errorf("Test case %v: Excpected no error, but got: %v", i, e)
+			}
+		}
+	}
+}
+
+func TestAssertPersistentValid(t *testing.T) {
+	var cases = []struct {
+		partitions    []pb.FlashingConfig_Partition
+		shouldFail    bool
+		shouldContain string
+	}{
+		{[]pb.FlashingConfig_Partition{}, false, ""},
+		{[]pb.FlashingConfig_Partition{
+			{PartUuid: testUuidStrings[1], Size: 10, GptType: testUuidStrings[1]},
+			{PartUuid: testUuidStrings[2], Size: 10, GptType: testUuidStrings[1]},
+		}, false, ""},
+		{[]pb.FlashingConfig_Partition{
+			{PartUuid: testUuidStrings[1], Size: 10, GptType: testUuidStrings[1]},
+			{PartUuid: testUuidStrings[2], Size: 10, GptType: testUuidStrings[0]},
+		}, true, "blank"},
+		{[]pb.FlashingConfig_Partition{
+			{PartUuid: testUuidStrings[1], Size: 10, GptType: testUuidStrings[0]},
+			{PartUuid: testUuidStrings[2], Size: 10, GptType: testUuidStrings[0]},
+		}, true, "blank"},
+		{[]pb.FlashingConfig_Partition{
+			{PartUuid: testUuidStrings[2], Size: 10, GptType: testUuidStrings[1]},
+			{PartUuid: testUuidStrings[2], Size: 5, GptType: testUuidStrings[2]},
+		}, true, "Duplicate"},
+		{[]pb.FlashingConfig_Partition{
+			{PartUuid: testUuidStrings[2], Size: 10, GptType: testUuidStrings[1]},
+			{PartUuid: testUuidStrings[1], Size: 0, GptType: testUuidStrings[2]},
+		}, true, "size 0"},
+	}
+
+	for i, c := range cases {
+		e := AssertPersistentValid(c.partitions)
 		if c.shouldFail {
 			if e == nil {
 				t.Errorf("Test case %v: Excpected error, but none occured", i)

@@ -42,6 +42,15 @@ func TestAssertExistingPartitionsMatchExact(t *testing.T) {
 		}, []pb.FlashingConfig_Partition{
 			{PartUuid: testUuidStrings[1], GptType: testUuidStrings[2], Size: 1024},
 		}, true},
+		{gpt.Table{ // Empty existing don't count
+			SectorSize: 512,
+			Partitions: []gpt.Partition{
+				{Id: testUuids[1], Type: gpt.PartType(testUuids[0]),
+					FirstLBA: 5, LastLBA: 8},
+			},
+		}, []pb.FlashingConfig_Partition{
+			{PartUuid: testUuidStrings[1], GptType: testUuidStrings[2], Size: 1024},
+		}, false},
 		{gpt.Table{
 			SectorSize: 512,
 			Partitions: []gpt.Partition{
