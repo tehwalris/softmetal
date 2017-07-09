@@ -2,8 +2,14 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"os"
+
+	"git.dolansoft.org/philippe/softmetal/flashing-agent/disk"
+	"git.dolansoft.org/philippe/softmetal/flashing-agent/partition"
 
 	"github.com/jaypipes/ghw"
+	"github.com/rekby/gpt"
 )
 
 func check(e error) {
@@ -13,41 +19,25 @@ func check(e error) {
 }
 
 func main() {
-	// ghw.Block()
-	// FindDisk(block, target_disk_combined_serial)
-	// LoadGpt(disk) (!)
+	targetDiskCombinedSerial := "TOSHIBA_THNSFJ256GCSU_46KS117IT8LW"
 
-	// validate disk and image gpts
-	// validate inputs (persistent partitions, ...) (!)
-	// ensure no id only matches
-	// remove not persistent
-	// add persistent if not exists (!)
-	// add all partitions
-
-	// write gpt
-	// ...
-
-	block, e := ghw.Block()
+	blockInfo, e := ghw.Block()
 	check(e)
-
-	fmt.Println(block.String())
-	for _, disk := range block.Disks {
-		fmt.Println(disk.String())
-		fmt.Println(disk.SerialNumber)
-		for _, part := range disk.Partitions {
-			fmt.Println(part.String())
-		}
+	disk, found, e := disk.FindDisk(blockInfo, targetDiskCombinedSerial)
+	check(e)
+	if !found {
+		panic("Disk not found")
 	}
 
-	/*
-		f, e := os.Open("/dev/sda")
-		check(e)
+	f, e := os.Open(fmt.Sprintf("/dev/%v", disk.Name))
+	check(e)
+	_, e = f.Seek(int64(disk.SectorSizeBytes), io.SeekStart)
+	check(e)
+	table, e := gpt.ReadTable(f, disk.SectorSizeBytes)
+	check(e)
 
-		_, e = f.Seek(512, io.SeekStart) // TODO other block sizes
-		check(e)
-		table, e := gpt.ReadTable(f, 512)
-		check(e)
+	partition.PrintTable(&table)
 
-		fmt.Printf("%+v", &table)
-	*/
+	// merge gpt
+	// write gpt
 }
