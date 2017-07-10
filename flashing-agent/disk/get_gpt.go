@@ -66,9 +66,11 @@ func createGpt(d *ghw.Disk) (*gpt.Table, error) {
 	return &table, nil
 }
 
-func GetOrCreateGpt(f *os.File, d *ghw.Disk) (*gpt.Table, error) {
+func GetOrCreateGpt(
+	f *os.File, d *ghw.Disk,
+) (returnTable *gpt.Table, didCreate bool, err error) {
 	if _, e := f.Seek(int64(d.SectorSizeBytes), io.SeekStart); e != nil {
-		return nil, e
+		return nil, false, e
 	}
 	table, e := gpt.ReadTable(f, d.SectorSizeBytes)
 	if e != nil {
@@ -76,9 +78,13 @@ func GetOrCreateGpt(f *os.File, d *ghw.Disk) (*gpt.Table, error) {
 			// "Bad GPT signature" almost definitely means the disk is empty.
 			// This is the only case where a fresh GPT will be created.
 			// Other cases fail for safety.
-			return createGpt(d)
+			createdTable, e := createGpt(d)
+			if e != nil {
+				return nil, false, e
+			}
+			return createdTable, true, nil
 		}
-		return nil, e
+		return nil, false, e
 	}
-	return &table, nil
+	return &table, false, nil
 }

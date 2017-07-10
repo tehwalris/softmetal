@@ -15,8 +15,7 @@ message FlashingConfig {
   }
   message ImageConfig {
     string url = 1;
-    bool auto_fill = 2;
-    BootEntry boot_entry = 3;
+    BootEntry boot_entry = 2;
   }
   message Partition {
     string part_uuid = 1;
@@ -36,8 +35,9 @@ message FlashingCommand {
   message CancelFlashing { }
   message PowerControl {
     enum Type {
-      REBOOT = 0;
-      POWER_OFF = 1;
+      OTHER = 0;
+      REBOOT = 1;
+      POWER_OFF = 2;
     }
 
     Type type = 1;
@@ -53,10 +53,11 @@ message FlashingCommand {
 message FlashingStatusUpdate {
   message StateChange {
     enum State {
-      READY_IDLE = 0;
-      STARTED = 1;
-      COMPLETE_SUCCEDED = 2;
-      COMPLETE_FAILED = 3;
+      OTHER = 0;
+      READY_IDLE = 1;
+      STARTED = 2;
+      COMPLETE_SUCCEDED = 3;
+      COMPLETE_FAILED = 4;
     }
 
     State state = 1;
@@ -70,14 +71,13 @@ message FlashingStatusUpdate {
   message FatalError {
     enum ErrorKind {
       OTHER = 0;
-      DISK_NOT_FOUND = 1;
-      FLASHING_NOT_SAFE = 2;
+      DISK_OPEN_FAILED = 1;
+      DISK_GPT_LOAD_FAILED = 2;
       IMAGE_LOAD_FAILED = 3;
-      IMAGE_WRITE_FAILED = 4;
-      IMAGE_INCOMPATIBLE = 5;
+      GPT_MERGE_FAILED = 4;
+      IMAGE_WRITE_FAILED = 5;
       BOOT_SETUP_FAILED = 6;
-      PARTITIONNING_FAILED = 7;
-      POWER_CONTROL_FAILED = 8;
+      POWER_CONTROL_FAILED = 7;
     }
 
     ErrorKind kind = 1;
