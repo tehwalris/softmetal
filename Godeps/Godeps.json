@@ -15,6 +15,11 @@
 			"Rev": "5a0f697c9ed9d68fef0116532c6e05cfeae00e55"
 		},
 		{
+			"ImportPath": "github.com/google/uuid",
+			"Comment": "0.2-5-g1c6adf5",
+			"Rev": "1c6adf5cd133db09196c44ffae1f77ebf4da64aa"
+		},
+		{
 			"ImportPath": "github.com/jaypipes/ghw",
 			"Rev": "91cbb1ab7cb879f1ead2fd26de40093ec00bd074"
 		},
