@@ -28,33 +28,20 @@ message FlashingConfig {
   repeated Partition persistent_partitions = 3;
 }
 
+enum PowerControlType {
+  REBOOT = 0;
+  POWER_OFF = 1;
+}
+
 message FlashingCommand {
-  message BeginFlashing {
-    FlashingConfig config = 1;
-  }
-  message CancelFlashing { }
-  message PowerControl {
-    enum Type {
-      OTHER = 0;
-      REBOOT = 1;
-      POWER_OFF = 2;
-    }
-
-    Type type = 1;
-  }
-
-  oneof command {
-    BeginFlashing begin_flashing = 1;
-    CancelFlashing cancel_flashing = 2;
-    PowerControl power_control = 3;
-  }
+  FlashingConfig config = 1;
+  PowerControlType power_on_completion = 2;
 }
 
 message FlashingStatusUpdate {
   message StateChange {
     enum State {
       OTHER = 0;
-      READY_IDLE = 1;
       STARTED = 2;
       COMPLETE_SUCCEDED = 3;
       COMPLETE_FAILED = 4;

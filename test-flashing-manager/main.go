@@ -23,6 +23,7 @@ func (s *supervisorServer) Supervise(
 	supervisionLog := log.New(os.Stderr, fmt.Sprintf("SUPER %v: ", agentId), log.LstdFlags)
 	agentLog := log.New(os.Stderr, fmt.Sprintf("AGENT %v: ", agentId), log.LstdFlags)
 	supervisionLog.Println("Agent connected")
+	client.Send(&pb.FlashingCommand{}) // TODO
 	for {
 		in, e := client.Recv()
 		if e == io.EOF {
