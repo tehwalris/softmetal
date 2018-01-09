@@ -1,3 +1,5 @@
+//go:generate protoc -I ../pb ../pb/flashing-supervisor.proto --go_out=plugins=grpc:../pb
+
 package main
 
 import (
@@ -39,20 +41,20 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 	return nil
 }
 
-func listen(logger *superlog.Logger) (error, pb.PowerControlType) {
+func listen(logger *superlog.Logger) (pb.PowerControlType, error) {
 	managerAddress := "localhost:5051"
 	defaultPowerControl := pb.PowerControlType_REBOOT
 
 	logger.Logf("Connecting to manager (%v).", managerAddress)
 	conn, e := grpc.Dial(managerAddress, grpc.WithInsecure())
 	if e != nil {
-		return e, defaultPowerControl
+		return defaultPowerControl, e
 	}
 
 	c := pb.NewFlashingSupervisorClient(conn)
 	superviseClient, e := c.Supervise(context.Background())
 	if e != nil {
-		return e, defaultPowerControl
+		return defaultPowerControl, e
 	}
 	defer superviseClient.CloseSend()
 	defer logger.DetachSupervisor()
@@ -62,20 +64,20 @@ func listen(logger *superlog.Logger) (error, pb.PowerControlType) {
 	if e == io.EOF {
 		logger.Log("Manager disconnected")
 		logger.DetachSupervisor()
-		return nil, defaultPowerControl
+		return defaultPowerControl, nil
 	}
 	if e != nil {
-		return e, defaultPowerControl
+		return defaultPowerControl, e
 	}
 	e, powerControl := flash(logger, in.Config), in.PowerOnCompletion
 	superviseClient.CloseSend()
 	superviseClient.Recv()
-	return e, powerControl
+	return powerControl, e
 }
 
 func main() {
 	logger := superlog.New(log.New(os.Stderr, "", log.LstdFlags))
-	e, powerControl := listen(logger)
+	powerControl, e := listen(logger)
 	if e != nil {
 		logger.Logf("Exited with error: %v", e)
 	} else {
