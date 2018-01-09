@@ -17,8 +17,8 @@ func TestFindDisk(t *testing.T) {
 		shouldContain     string
 	}{
 		{[]ghw.Disk{}, "testTargetSerial", 0, false, false, ""},
-		{[]ghw.Disk{}, "", 0, false, true, "Bad serial"},
-		{[]ghw.Disk{}, "unknown", 0, false, true, "Bad serial"},
+		{[]ghw.Disk{}, "", 0, false, true, "bad serial"},
+		{[]ghw.Disk{}, "unknown", 0, false, true, "bad serial"},
 		{[]ghw.Disk{
 			{SerialNumber: "testDisk0Serial"},
 		}, "testDisk0Serial", 0, true, false, ""},
