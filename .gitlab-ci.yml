@@ -22,5 +22,4 @@ before_script:
 test:
   stage: test
   script:
-    - godep restore
     - go test -v ./...
