@@ -15,7 +15,7 @@ func createGpt(d *ghw.Disk) (*gpt.Table, error) {
 	sizeBlocks := d.SizeBytes / d.SectorSizeBytes
 	if d.SizeBytes%d.SectorSizeBytes != 0 {
 		return nil, fmt.Errorf(
-			"Expected disk size to be a multiple of sector size. Was %v bytes with %v byte sectors.",
+			"expected disk size to be a multiple of sector size. Was %v bytes with %v byte sectors",
 			d.SizeBytes, d.SectorSizeBytes,
 		)
 	}
@@ -30,9 +30,9 @@ func createGpt(d *ghw.Disk) (*gpt.Table, error) {
 	}
 	if d.SectorSizeBytes < 128 {
 		// Something is probably very wrong if we get here
-		return nil, fmt.Errorf("Unexpectedly small sector size (%v bytes).", d.SectorSizeBytes)
+		return nil, fmt.Errorf("unexpectedly small sector size (%v bytes)", d.SectorSizeBytes)
 	}
-	randomUuid, e := uuid.NewRandom()
+	randomUUID, e := uuid.NewRandom()
 	if e != nil {
 		return nil, e
 	}
@@ -48,7 +48,7 @@ func createGpt(d *ghw.Disk) (*gpt.Table, error) {
 			HeaderCopyStartLBA:      0, // Set by CreateTableForNewDiskSize
 			FirstUsableLBA:          2048,
 			LastUsableLBA:           0, // Set by CreateTableForNewDiskSize
-			DiskGUID:                gpt.Guid(randomUuid),
+			DiskGUID:                gpt.Guid(randomUUID),
 			PartitionsTableStartLBA: 2,
 			PartitionsArrLen:        128,
 			PartitionEntrySize:      128,
@@ -60,12 +60,13 @@ func createGpt(d *ghw.Disk) (*gpt.Table, error) {
 	table = table.CreateTableForNewDiskSize(sizeBlocks)
 	if table.Header.HeaderCopyStartLBA == 0 || table.Header.LastUsableLBA == 0 {
 		return nil, errors.New(
-			"Expected GPT table HeaderCopyStartLBA and LastUsableLBA to be set.",
+			"expected GPT table HeaderCopyStartLBA and LastUsableLBA to be set",
 		)
 	}
 	return &table, nil
 }
 
+// GetOrCreateGpt loads a GPT from a disk. If there is no GPT, it returns a new compatible one.
 func GetOrCreateGpt(
 	f *os.File, d *ghw.Disk,
 ) (returnTable *gpt.Table, didCreate bool, err error) {

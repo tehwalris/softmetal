@@ -8,6 +8,7 @@ import (
 	"github.com/jaypipes/ghw"
 )
 
+// OpenBySerial finds a a disk by serial and returns its block device file and metadata.
 func OpenBySerial(combinedSerial string) (file *os.File, diskInfo *ghw.Disk, err error) {
 	blockInfo, e := ghw.Block()
 	if e != nil {
@@ -18,7 +19,7 @@ func OpenBySerial(combinedSerial string) (file *os.File, diskInfo *ghw.Disk, err
 		return nil, nil, e
 	}
 	if !found {
-		return nil, nil, fmt.Errorf("Disk %v not found.", combinedSerial)
+		return nil, nil, fmt.Errorf("disk %v not found", combinedSerial)
 	}
 	// TODO
 	log.Printf("WARNING: Using test disk image instead of real disk.")

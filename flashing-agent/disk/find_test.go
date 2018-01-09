@@ -41,10 +41,10 @@ func TestFindDisk(t *testing.T) {
 
 	for i, c := range cases {
 		var diskPointers = make([]*ghw.Disk, len(c.disks))
-		for j, _ := range c.disks {
+		for j := range c.disks {
 			diskPointers[j] = &c.disks[j]
 		}
-		var expectedDisk *ghw.Disk = nil
+		var expectedDisk *ghw.Disk
 		if c.shouldFind {
 			expectedDisk = diskPointers[c.expectedDiskIndex]
 		}
@@ -52,7 +52,7 @@ func TestFindDisk(t *testing.T) {
 		disk, found, e := FindDisk(&blockInfo, c.targetSerial)
 
 		if disk != expectedDisk {
-			t.Errorf("Test case %v: Returned disk did not match expected.")
+			t.Errorf("Test case %v: Returned disk did not match expected.", i)
 		}
 
 		if found != c.shouldFind {
