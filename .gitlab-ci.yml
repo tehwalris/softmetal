@@ -6,7 +6,7 @@ variables:
 before_script:
   - echo $GO_PROJECT_PATH
   - apk --update add git protobuf
-  - go get github.com/tools/godep
+  - go get github.com/golang/dep/cmd/dep
   - mkdir -p $GO_PROJECT_PATH
   - rmdir $GO_PROJECT_PATH
   - cp -r $CI_PROJECT_DIR $GO_PROJECT_PATH
@@ -14,9 +14,9 @@ before_script:
   - go get -u github.com/golang/protobuf/proto
   - go get -u github.com/golang/protobuf/protoc-gen-go
   - go get -u google.golang.org/grpc
-  - mkdir pb
-  - cd protos
-  - protoc *.proto --go_out=plugins=grpc:../pb
+  - dep ensure -vendor-only
+  - cd flashing-agent
+  - go generate
   - cd ..
 
 test:
