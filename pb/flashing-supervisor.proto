@@ -3,11 +3,12 @@ syntax = "proto3";
 package softmetal;
 
 service FlashingSupervisor {
-  rpc Supervise (stream FlashingStatusUpdate) returns (stream FlashingCommand);
+  rpc Supervise(stream FlashingStatusUpdate) returns (stream FlashingCommand);
 }
 
 message FlashingConfig {
   message BootEntry {
+    /* TODO disk and partition should be relative to flashed image */
     string efi_disk = 1;
     uint32 efi_partition = 2;
     string label = 3;
@@ -49,12 +50,8 @@ message FlashingStatusUpdate {
 
     State state = 1;
   }
-  message Progress {
-    float progress = 1;
-  }
-  message GenericLog {
-    string log = 1;
-  }
+  message Progress { float progress = 1; }
+  message GenericLog { string log = 1; }
   message FatalError {
     enum ErrorKind {
       OTHER = 0;

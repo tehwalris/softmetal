@@ -43,7 +43,7 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 
 func listen(logger *superlog.Logger) (pb.PowerControlType, error) {
 	managerAddress := "localhost:5051"
-	defaultPowerControl := pb.PowerControlType_REBOOT
+	var defaultPowerControl pb.PowerControlType
 
 	logger.Logf("Connecting to manager (%v).", managerAddress)
 	conn, e := grpc.Dial(managerAddress, grpc.WithInsecure())
@@ -64,21 +64,23 @@ func listen(logger *superlog.Logger) (pb.PowerControlType, error) {
 	if e == io.EOF {
 		logger.Log("Manager disconnected")
 		logger.DetachSupervisor()
+		// TODO why no error here?
 		return defaultPowerControl, nil
 	}
 	if e != nil {
 		return defaultPowerControl, e
 	}
-	e, powerControl := flash(logger, in.Config), in.PowerOnCompletion
+	e = flash(logger, in.Config)
 	superviseClient.CloseSend()
 	superviseClient.Recv()
-	return powerControl, e
+	return in.PowerOnCompletion, e
 }
 
 func main() {
 	logger := superlog.New(log.New(os.Stderr, "", log.LstdFlags))
 	powerControl, e := listen(logger)
 	if e != nil {
+		// TODO what about power control after this?
 		logger.Logf("Exited with error: %v", e)
 	} else {
 		logger.Log("Exited cleanly.")

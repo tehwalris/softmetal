@@ -23,7 +23,13 @@ func (s *supervisorServer) Supervise(
 	supervisionLog := log.New(os.Stderr, fmt.Sprintf("SUPER %v: ", agentId), log.LstdFlags)
 	agentLog := log.New(os.Stderr, fmt.Sprintf("AGENT %v: ", agentId), log.LstdFlags)
 	supervisionLog.Println("Agent connected")
-	client.Send(&pb.FlashingCommand{}) // TODO
+	client.Send(&pb.FlashingCommand{
+		Config: &pb.FlashingConfig{
+			TargetDiskCombinedSerial: "TOSHIBA_THNSFJ256GCSU_46KS117IT8LW",
+			PersistentPartitions:     []*pb.FlashingConfig_Partition{},
+		},
+		PowerOnCompletion: pb.PowerControlType_POWER_OFF,
+	}) // TODO
 	for {
 		in, e := client.Recv()
 		if e == io.EOF {

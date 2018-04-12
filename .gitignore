@@ -1,2 +1,4 @@
 vendor
-bin
+/bin
+/flashing-agent/flashing-agent
+/test-flashing-manager/test-flashing-manager
