@@ -1,0 +1,19 @@
+systemd:
+  units:
+    - name: "example.service"
+      enable: true
+      contents: |
+        [Unit]
+        Description=An example service
+        After=docker.service
+        Requires=docker.service
+
+        [Service]
+        TimeoutStartSec=0
+        ExecStartPre=-/usr/bin/docker kill example
+        ExecStartPre=-/usr/bin/docker rm example
+        ExecStartPre=/usr/bin/docker pull hello-world
+        ExecStart=/usr/bin/docker run --name example hello-world
+
+        [Install]
+        WantedBy=multi-user.target

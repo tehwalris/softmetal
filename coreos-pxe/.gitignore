@@ -1,0 +1,3 @@
+/coreos_production_pxe_image.cpio.gz
+/coreos_production_pxe.vmlinuz
+/config/ignition.json
