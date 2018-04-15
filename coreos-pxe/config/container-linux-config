@@ -1,7 +1,7 @@
 systemd:
   units:
     - name: "example.service"
-      enable: true
+      enabled: true
       contents: |
         [Unit]
         Description=An example service
@@ -10,8 +10,7 @@ systemd:
 
         [Service]
         TimeoutStartSec=0
-        ExecStartPre=-/usr/bin/docker kill example
-        ExecStartPre=-/usr/bin/docker rm example
+        ExecStartPre=-/usr/bin/docker rm -f example
         ExecStartPre=/usr/bin/docker pull hello-world
         ExecStart=/usr/bin/docker run --name example hello-world
 
