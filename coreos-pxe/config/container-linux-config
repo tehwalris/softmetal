@@ -1,18 +1,17 @@
-systemd:
-  units:
-    - name: "example.service"
-      enabled: true
-      contents: |
-        [Unit]
-        Description=An example service
-        After=docker.service
-        Requires=docker.service
-
-        [Service]
-        TimeoutStartSec=0
-        ExecStartPre=-/usr/bin/docker rm -f example
-        ExecStartPre=/usr/bin/docker pull hello-world
-        ExecStart=/usr/bin/docker run --name example hello-world
-
-        [Install]
-        WantedBy=multi-user.target
+storage:
+  files:
+    - path: /opt/agent
+      filesystem: root
+      contents:
+        remote:
+          url: http://{{softmetalHostPort}}/agent-linux-amd64
+      mode: 0777
+    - path: /home/core/.bashrc
+      filesystem: root
+      contents:
+        inline: "[[ $- != *i* ]] || sudo /opt/agent"
+      mode: 0644
+      user:
+        name: core
+      group:
+        name: core
