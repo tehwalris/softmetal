@@ -6,10 +6,10 @@ import (
 )
 
 func PrintTable(table *gpt.Table, logger *superlog.Logger) {
-	logger.Log("GPT table:")
+	logger.Logf("GPT table:")
 	logger.Logf("  Sector size: %v", table.SectorSize)
 	logger.Logf("  Header: %v", table.Header)
-	logger.Log("  Partitions:")
+	logger.Logf("  Partitions:")
 	consecutiveEmpty := 0
 	for i, p := range table.Partitions {
 		if p.IsEmpty() {

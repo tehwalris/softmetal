@@ -21,5 +21,25 @@
 
 
 [[constraint]]
+  name = "github.com/golang/protobuf"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/google/uuid"
+  version = "0.2.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/jaypipes/ghw"
+
+[[constraint]]
   branch = "master"
   name = "github.com/rekby/gpt"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/net"
+
+[[constraint]]
+  name = "google.golang.org/grpc"
+  version = "1.11.3"

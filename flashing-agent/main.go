@@ -4,7 +4,7 @@ package main
 
 import (
 	"context"
-	"io"
+	"flag"
 	"log"
 	"os"
 
@@ -14,6 +14,8 @@ import (
 	pb "git.dolansoft.org/philippe/softmetal/pb"
 	"google.golang.org/grpc"
 )
+
+var managerHP = flag.String("manager", "", "host and GRPC port of flashing manager (required)")
 
 func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 	targetDiskSerial := "TOSHIBA_THNSFJ256GCSU_46KS117IT8LW"
@@ -29,9 +31,9 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 		return e
 	}
 	if didCreateGpt {
-		logger.Log("Using new blank GPT table (no table found on disk).")
+		logger.Logf("Using new blank GPT table (no table found on disk).")
 	} else {
-		logger.Log("Using existing GPT table from disk.")
+		logger.Logf("Using existing GPT table from disk.")
 	}
 
 	partition.PrintTable(table, logger)
@@ -42,48 +44,37 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 }
 
 func listen(logger *superlog.Logger) (pb.PowerControlType, error) {
-	managerAddress := "localhost:5051"
 	var defaultPowerControl pb.PowerControlType
 
-	logger.Logf("Connecting to manager (%v).", managerAddress)
-	conn, e := grpc.Dial(managerAddress, grpc.WithInsecure())
+	logger.Logf("connecting to manager: %v", *managerHP)
+	conn, e := grpc.Dial(*managerHP, grpc.WithInsecure())
 	if e != nil {
 		return defaultPowerControl, e
 	}
 
 	c := pb.NewFlashingSupervisorClient(conn)
-	superviseClient, e := c.Supervise(context.Background())
+	cmd, e := c.GetCommand(context.Background(), &pb.Empty{})
 	if e != nil {
 		return defaultPowerControl, e
 	}
-	defer superviseClient.CloseSend()
+	logger.AttachSupervisor(c, cmd.SessionId)
 	defer logger.DetachSupervisor()
-	logger.AttachSupervisor(&superviseClient)
 
-	in, e := superviseClient.Recv()
-	if e == io.EOF {
-		logger.Log("Manager disconnected")
-		logger.DetachSupervisor()
-		// TODO why no error here?
-		return defaultPowerControl, nil
+	if e = flash(logger, cmd.Config); e != nil {
+		// log this here so that supervisor gets it, since it will be detatched later
+		logger.Logf("flashing error: %v", e)
 	}
-	if e != nil {
-		return defaultPowerControl, e
-	}
-	e = flash(logger, in.Config)
-	superviseClient.CloseSend()
-	superviseClient.Recv()
-	return in.PowerOnCompletion, e
+	return cmd.PowerOnCompletion, e
 }
 
 func main() {
+	flag.Parse()
+	if *managerHP == "" {
+		log.Fatalf("missing required arguments")
+	}
+
 	logger := superlog.New(log.New(os.Stderr, "", log.LstdFlags))
 	powerControl, e := listen(logger)
-	if e != nil {
-		// TODO what about power control after this?
-		logger.Logf("Exited with error: %v", e)
-	} else {
-		logger.Log("Exited cleanly.")
-	}
-	logger.Logf("Would power control: %v", powerControl) // TODO
+	logger.Logf("flashing error: %v", e)
+	logger.Logf("would power control: %v", powerControl)
 }

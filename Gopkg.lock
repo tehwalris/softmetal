@@ -3,18 +3,21 @@
 
 [[projects]]
   name = "github.com/golang/protobuf"
-  packages = ["proto","ptypes/any"]
-  revision = "5a0f697c9ed9d68fef0116532c6e05cfeae00e55"
+  packages = ["proto","ptypes","ptypes/any","ptypes/duration","ptypes/timestamp"]
+  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/google/uuid"
   packages = ["."]
-  revision = "1c6adf5cd133db09196c44ffae1f77ebf4da64aa"
+  revision = "064e2069ce9c359c118179501254f67d7d37ba24"
+  version = "0.2"
 
 [[projects]]
+  branch = "master"
   name = "github.com/jaypipes/ghw"
   packages = ["."]
-  revision = "91cbb1ab7cb879f1ead2fd26de40093ec00bd074"
+  revision = "f5145c200b133a0768ce154da6f6a2feb21be4da"
 
 [[projects]]
   branch = "master"
@@ -23,28 +26,32 @@
   revision = "f2cbeebca98b6b541e4c441208a81b4c12b17925"
 
 [[projects]]
+  branch = "master"
   name = "golang.org/x/net"
   packages = ["context","http2","http2/hpack","idna","internal/timeseries","lex/httplex","trace"]
-  revision = "e4fa1c5465ad6111f206fc92186b8c83d64adbe1"
+  revision = "61147c48b25b599e5b561d2e9c4f3e1ef489ca41"
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = ["internal/gen","internal/triegen","internal/ucd","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
-  revision = "ccbd3f7822129ff389f8ca4858a9b9d4d910531c"
+  packages = ["collate","collate/build","internal/colltab","internal/gen","internal/tag","internal/triegen","internal/ucd","language","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
 
 [[projects]]
+  branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "aa2eb687b4d3e17154372564ad8d6bf11c3cf21f"
+  revision = "7fd901a49ba6a7f87732eb344f6e3c5b19d1b200"
 
 [[projects]]
   name = "google.golang.org/grpc"
-  packages = [".","codes","credentials","grpclb/grpc_lb_v1","grpclog","internal","keepalive","metadata","naming","peer","stats","status","tap","transport"]
-  revision = "6fecf2831adf75ce3b8b756d2d174db8a2044dbb"
+  packages = [".","balancer","balancer/base","balancer/roundrobin","codes","connectivity","credentials","encoding","encoding/proto","grpclb/grpc_lb_v1/messages","grpclog","internal","keepalive","metadata","naming","peer","resolver","resolver/dns","resolver/passthrough","stats","status","tap","transport"]
+  revision = "d11072e7ca9811b1100b80ca0269ac831f06d024"
+  version = "v1.11.3"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a6003e88737333d85c7d72767abcf262527922889fb5fcb1e3e267f6fc0896e9"
+  inputs-digest = "e86fdf036297df08c27b4e7cdfcc3f480e3fcbae95eed8d50bfdfa300d8a1a2b"
   solver-name = "gps-cdcl"
   solver-version = 1

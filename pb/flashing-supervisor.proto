@@ -3,8 +3,13 @@ syntax = "proto3";
 package softmetal;
 
 service FlashingSupervisor {
-  rpc Supervise(stream FlashingStatusUpdate) returns (stream FlashingCommand);
+  rpc GetCommand(Empty) returns (FlashingCommand);
+  rpc RecordLog(RecordLogRequest) returns (Empty);
+  rpc RecordProgress(RecordProgressRequest) returns (Empty);
+  rpc RecordFinished(RecordFinishedRequest) returns (Empty);
 }
+
+message Empty {}
 
 message FlashingConfig {
   message BootEntry {
@@ -35,42 +40,22 @@ enum PowerControlType {
 }
 
 message FlashingCommand {
+  uint64 session_id = 3;
   FlashingConfig config = 1;
   PowerControlType power_on_completion = 2;
 }
 
-message FlashingStatusUpdate {
-  message StateChange {
-    enum State {
-      OTHER = 0;
-      STARTED = 2;
-      COMPLETE_SUCCEDED = 3;
-      COMPLETE_FAILED = 4;
-    }
+message RecordLogRequest {
+  uint64 session_id = 2;
+  string log = 1;
+}
 
-    State state = 1;
-  }
-  message Progress { float progress = 1; }
-  message GenericLog { string log = 1; }
-  message FatalError {
-    enum ErrorKind {
-      OTHER = 0;
-      DISK_OPEN_FAILED = 1;
-      DISK_GPT_LOAD_FAILED = 2;
-      IMAGE_LOAD_FAILED = 3;
-      GPT_MERGE_FAILED = 4;
-      IMAGE_WRITE_FAILED = 5;
-      BOOT_SETUP_FAILED = 6;
-      POWER_CONTROL_FAILED = 7;
-    }
+message RecordProgressRequest {
+  uint64 session_id = 2;
+  float progress = 1;
+}
 
-    ErrorKind kind = 1;
-  }
-
-  oneof update {
-    StateChange state_change = 1;
-    Progress progress = 2;
-    GenericLog generic_log = 3;
-    FatalError fatal_error = 4;
-  }
+message RecordFinishedRequest {
+  uint64 session_id = 2;
+  bool ok = 1;
 }

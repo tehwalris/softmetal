@@ -4,12 +4,14 @@ storage:
       filesystem: root
       contents:
         remote:
-          url: http://{{softmetalHostPort}}/agent-linux-amd64
+          url: http://{{softmetalHost}}:{{softmetalHTTPPort}}/agent-linux-amd64
       mode: 0777
     - path: /home/core/.bashrc
       filesystem: root
       contents:
-        inline: "[[ $- != *i* ]] || sudo /opt/agent"
+        inline: |
+          [[ $- != *i* ]] && return # Ignore non-interactive shells
+          sudo /opt/agent -manager {{softmetalHost}}:{{softmetalGRPCPort}}
       mode: 0644
       user:
         name: core
