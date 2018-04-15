@@ -16,17 +16,20 @@ var httpListen = flag.String("http-listen", ":8080", "address and port to listen
 var grpcListen = flag.String("grpc-listen", ":6781", "address and port to listen for GRPC on (required)")
 
 type supervisorServer struct {
-	agentIdCounter uint64
+	agentIDCounter uint64
 }
 
 func (s *supervisorServer) GetCommand(ctx context.Context, r *pb.Empty) (*pb.FlashingCommand, error) {
-	sid := atomic.AddUint64(&s.agentIdCounter, 1)
+	sid := atomic.AddUint64(&s.agentIDCounter, 1)
 	log.Printf("SUPER %v: agent connected", sid)
 	return &pb.FlashingCommand{
 		SessionId: sid,
 		Config: &pb.FlashingConfig{
-			TargetDiskCombinedSerial: "TOSHIBA_THNSFJ256GCSU_46KS117IT8LW",
-			PersistentPartitions:     []*pb.FlashingConfig_Partition{},
+			TargetDiskCombinedSerial: "QEMU_HARDDISK_QM00001",
+			ImageConfig: &pb.FlashingConfig_ImageConfig{
+				Url:        "http://tws:9000/test-images/packer-qemu-raw",
+				SectorSize: 512,
+			},
 		},
 		PowerOnCompletion: pb.PowerControlType_POWER_OFF,
 	}, nil

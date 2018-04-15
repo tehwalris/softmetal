@@ -5,8 +5,8 @@ import (
 	"github.com/rekby/gpt"
 )
 
-func PrintTable(table *gpt.Table, logger *superlog.Logger) {
-	logger.Logf("GPT table:")
+func PrintTable(table *gpt.Table, logger *superlog.Logger, title string) {
+	logger.Logf(title + ":")
 	logger.Logf("  Sector size: %v", table.SectorSize)
 	logger.Logf("  Header: %v", table.Header)
 	logger.Logf("  Partitions:")

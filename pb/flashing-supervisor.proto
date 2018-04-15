@@ -21,6 +21,7 @@ message FlashingConfig {
   }
   message ImageConfig {
     string url = 1;
+    uint32 sectorSize = 3;
     BootEntry boot_entry = 2;
   }
   message Partition {

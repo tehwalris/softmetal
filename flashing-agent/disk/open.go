@@ -2,7 +2,6 @@ package disk
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/jaypipes/ghw"
@@ -21,10 +20,7 @@ func OpenBySerial(combinedSerial string) (file *os.File, diskInfo *ghw.Disk, err
 	if !found {
 		return nil, nil, fmt.Errorf("disk %v not found", combinedSerial)
 	}
-	// TODO
-	log.Printf("WARNING: Using test disk image instead of real disk.")
-	f, e := os.Open("/home/philippe/temp/test-gpt.img")
-	// f, e := os.Open(fmt.Sprintf("/dev/%v", d.Name))
+	f, e := os.OpenFile(fmt.Sprintf("/dev/%v", d.Name), os.O_RDWR|os.O_TRUNC|os.O_SYNC, 0660)
 	if e != nil {
 		return nil, nil, e
 	}
