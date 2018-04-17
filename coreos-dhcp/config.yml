@@ -1,0 +1,14 @@
+networkd:
+  units:
+    - name: 00-eth0.network
+      contents: |
+        [Match]
+        Name=eth0
+
+        [Network]
+        Address=10.0.0.1/24
+passwd:
+  users:
+    - name: core
+      ssh_authorized_keys:
+        - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDH5dGOM3fuWmBOBYLWlKLqqvtVLtuqI+dDv36/sryqACR3yeWwC5fsLPZkm+ziJnhpxOZNI2Kbx1XuiAfTWB3bE093E1O0M8WcYgEIfHvYmNee1w8h7/RAiJJ92LEKMHvLOLoxTB4RMmkK2/ayUQ2icmF0BMbe+8ReDpxpyVxuAaT41TUhrpIsXNCYjzwJHhWbIwq7JaE4bC6vjUn1WZpayW1I1W5Qc/VxAA72rEqR3AU9EekUMr2kCZMcgvurE9dJ6SssO2J3YjvHzlkQ/L8Cp9FvuyhdCmwZLystciXOM82v0gIUsFo9kidPuVbe60SgLA71KXYc5j0u4FSrBUy3+vweH5NQRh1AQESYacOXiUWUzDonOm7EQC1RrWHdM0oBUPx0T2p08/wh9+7bE9KgIp5vn2KE/+Kr1JR0TsKVzpV1LD73AjogrzA0ZjiKQT9DZsmYbpjhUhdpjuwa88nuHoCWv8mKFZEmG562gxBq54AsUGA0Qm0yE/qi8ZyX7aOoXbif1OvNnj9UyA4GAHjY5Y7s+Qw0NR2X4e/U3jd5SmcaqgK813Px6HNQloYGlsI4PPx0TuBcAP9dK8WeeUXXi24tJrgmJlzAs/GHKm3JZkIkww+xFJy7KMa2eAMQtqKR9d+cSvpT1XaOLhX4W5gDZyIl4MOCp9TzOSRvZK+gWw== philippe@tupw-antergos

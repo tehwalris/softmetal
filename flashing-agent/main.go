@@ -61,7 +61,7 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 	var imgBuf bytes.Buffer
 	imgBuf.Grow(gptBufferSize)
 	_, e = io.CopyN(&imgBuf, imgRes.Body, gptBufferSize)
-	if e != nil {
+	if e != nil && e != io.EOF {
 		return fmt.Errorf("while buffering: %v", e)
 	}
 	if e := imgRes.Body.Close(); e != nil {

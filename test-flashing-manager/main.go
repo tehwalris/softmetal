@@ -12,8 +12,9 @@ import (
 	"google.golang.org/grpc"
 )
 
-var httpListen = flag.String("http-listen", ":8080", "address and port to listen for HTTP on (required)")
-var grpcListen = flag.String("grpc-listen", ":6781", "address and port to listen for GRPC on (required)")
+var httpListen = flag.String("http-listen", ":8080", "address and port to listen for HTTP on")
+var grpcListen = flag.String("grpc-listen", ":6781", "address and port to listen for GRPC on")
+var imageURL = flag.String("image", "", "URL of the disk image to flash (required)")
 
 type supervisorServer struct {
 	agentIDCounter uint64
@@ -27,7 +28,7 @@ func (s *supervisorServer) GetCommand(ctx context.Context, r *pb.Empty) (*pb.Fla
 		Config: &pb.FlashingConfig{
 			TargetDiskCombinedSerial: "QEMU_HARDDISK_QM00001",
 			ImageConfig: &pb.FlashingConfig_ImageConfig{
-				Url:        "http://tws:9000/test-images/packer-qemu-raw",
+				Url:        *imageURL,
 				SectorSize: 512,
 			},
 		},
@@ -62,6 +63,9 @@ func check(e error) {
 
 func main() {
 	flag.Parse()
+	if *imageURL == "" {
+		log.Fatalf("missing required arguments, see -help")
+	}
 
 	lis, e := net.Listen("tcp", *grpcListen)
 	check(e)
