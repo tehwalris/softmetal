@@ -37,3 +37,13 @@ func ContainsId(
 	}
 	return false
 }
+
+// EqGUID checks if two GPT GUIDs are equal.
+func EqGUID(a gpt.Guid, b gpt.Guid) bool {
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
