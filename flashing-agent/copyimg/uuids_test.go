@@ -1,4 +1,4 @@
-package main
+package copyimg_test
 
 import "github.com/rekby/gpt"
 

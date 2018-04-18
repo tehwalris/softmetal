@@ -1,9 +1,10 @@
-package main
+package copyimg_test
 
 import (
 	"strings"
 	"testing"
 
+	"git.dolansoft.org/philippe/softmetal/flashing-agent/copyimg"
 	pb "git.dolansoft.org/philippe/softmetal/pb"
 
 	"github.com/rekby/gpt"
@@ -240,7 +241,7 @@ func TestMergeGpt(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		e := MergeGpt(&c.diskGpt, &c.imageGpt, c.persistent)
+		e := copyimg.MergeGpt(&c.diskGpt, &c.imageGpt, c.persistent)
 		if c.shouldFail {
 			if e == nil {
 				t.Errorf("Test case %v: Excpected error, but none occured", i)

@@ -15,6 +15,7 @@ import (
 	"github.com/jaypipes/ghw"
 	"github.com/rekby/gpt"
 
+	"git.dolansoft.org/philippe/softmetal/flashing-agent/copyimg"
 	"git.dolansoft.org/philippe/softmetal/flashing-agent/disk"
 	"git.dolansoft.org/philippe/softmetal/flashing-agent/partition"
 	"git.dolansoft.org/philippe/softmetal/flashing-agent/superlog"
@@ -86,7 +87,7 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 	for i, p := range config.PersistentPartitions {
 		pers[i] = *p
 	}
-	if e := MergeGpt(table, &imgTable, pers); e != nil {
+	if e := copyimg.MergeGpt(table, &imgTable, pers); e != nil {
 		return fmt.Errorf("while merging GPT: %v", e)
 	}
 	partition.PrintTable(table, logger, "Merged GPT")
