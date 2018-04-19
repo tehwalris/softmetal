@@ -3,6 +3,8 @@ package copyimg
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
+	"sort"
 
 	"git.dolansoft.org/philippe/softmetal/flashing-agent/partition"
 	"github.com/rekby/gpt"
@@ -20,8 +22,70 @@ type Task struct {
 // CopyToSeeker fails if two tasks have overlapping source regions.
 // CopyToSeeker fails if two tasks have overlapping destination regions.
 // CopyToSeeker fails if any source or target region is out of range.
-func CopyToSeeker(src io.Reader, dst io.ReadSeeker, tasks []Task) error {
-	return fmt.Errorf("not implemented")
+// When CopyToSeeker fails, the value of destination bytes is undefined.
+// Destination bytes which are not referenced by tasks never change (even after errors).
+func CopyToSeeker(dst io.WriteSeeker, src io.Reader, unsortedTasks []Task) error {
+	var tasks tasks
+	tasks.d = make([]Task, len(unsortedTasks))
+	copy(tasks.d, unsortedTasks)
+
+	tasks.useDst = true
+	sort.Sort(tasks)
+	var i int64
+	for _, t := range tasks.d {
+		delta := int64(t.Dst) - i
+		if delta < 0 {
+			return fmt.Errorf("destination regions of tasks overlap")
+		}
+		i = int64(t.Dst + t.Size)
+	}
+
+	tasks.useDst = false
+	sort.Sort(tasks)
+	i = 0
+	for _, t := range tasks.d {
+		srcDelta := int64(t.Src) - i
+		if srcDelta < 0 {
+			return fmt.Errorf("source regions of tasks overlap")
+		}
+		n, e := io.CopyN(ioutil.Discard, src, srcDelta)
+		if e != nil {
+			return e
+		}
+		i += n
+
+		if _, e := dst.Seek(int64(t.Dst), io.SeekStart); e != nil {
+			return e
+		}
+
+		n, e = io.CopyN(dst, src, int64(t.Size))
+		if e != nil {
+			return e
+		}
+		i += n
+	}
+	return nil
+}
+
+// Tasks wraps []Task, so that sort.Interface can be implemented.
+type tasks struct {
+	d      []Task
+	useDst bool
+}
+
+func (c tasks) Len() int { return len(c.d) }
+
+func (c tasks) Less(i, j int) bool {
+	if c.useDst {
+		return c.d[i].Dst < c.d[j].Dst
+	}
+	return c.d[i].Src < c.d[j].Src
+}
+
+func (c tasks) Swap(i, j int) {
+	ti := c.d[i]
+	c.d[i] = c.d[j]
+	c.d[j] = ti
 }
 
 // PlanFromGPTs plans copy operations to transfer data for all partitions which are in both GPT tables.
