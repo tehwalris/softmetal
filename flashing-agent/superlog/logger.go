@@ -9,6 +9,8 @@ import (
 	pb "git.dolansoft.org/philippe/softmetal/pb"
 )
 
+var timeout = time.Millisecond * 500
+
 type Logger struct {
 	baseLogger      *log.Logger
 	superviseClient pb.FlashingSupervisorClient
@@ -25,7 +27,7 @@ func New(baseLogger *log.Logger) *Logger {
 func (l *Logger) trySendToSupervisor(msg string) {
 	c := l.superviseClient
 	if c != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*500)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 		c.RecordLog(ctx, &pb.RecordLogRequest{
 			SessionId: l.sessID,
@@ -41,6 +43,19 @@ func (l *Logger) logString(msg string) {
 
 func (l *Logger) Logf(format string, v ...interface{}) {
 	l.logString(fmt.Sprintf(format, v...))
+}
+
+func (l *Logger) Progress(p float32) {
+	l.baseLogger.Printf("Progress: %v", p)
+	c := l.superviseClient
+	if c != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		c.RecordProgress(ctx, &pb.RecordProgressRequest{
+			SessionId: l.sessID,
+			Progress:  p,
+		})
+	}
 }
 
 func (l *Logger) AttachSupervisor(client pb.FlashingSupervisorClient, sessID uint64) {

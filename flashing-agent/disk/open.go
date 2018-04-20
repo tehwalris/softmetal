@@ -20,7 +20,7 @@ func OpenBySerial(combinedSerial string) (file *os.File, diskInfo *ghw.Disk, err
 	if !found {
 		return nil, nil, fmt.Errorf("disk %v not found", combinedSerial)
 	}
-	f, e := os.OpenFile(fmt.Sprintf("/dev/%v", d.Name), os.O_RDWR|os.O_TRUNC|os.O_SYNC, 0660)
+	f, e := os.OpenFile(fmt.Sprintf("/dev/%v", d.Name), os.O_RDWR|os.O_TRUNC, 0660)
 	if e != nil {
 		return nil, nil, e
 	}

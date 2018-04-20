@@ -56,7 +56,7 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 	logger.Logf("using image: %v", imgURL)
 	imgRes, e := http.Get(imgURL)
 	if e != nil {
-		return fmt.Errorf("while getting image: %v", e)
+		return fmt.Errorf("while getting image (first): %v", e)
 	}
 
 	var imgBuf bytes.Buffer
@@ -102,8 +102,35 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 		return fmt.Errorf("while writing protective MBR: %v", e)
 	}
 
-	// plan copy operations
-	// actually copy data
+	cpTasks, e := copyimg.PlanFromGPTs(table, &imgTable)
+	if e != nil {
+		return fmt.Errorf("while planning copy: %v", e)
+	}
+	cpTasks = copyimg.SplitTasks(cpTasks, 100)
+	imgRes, e = http.Get(imgURL)
+	if e != nil {
+		return fmt.Errorf("while getting image (second): %v", e)
+	}
+
+	var total uint64
+	for _, t := range cpTasks {
+		total += t.Size
+	}
+	progC := make(chan uint64, 50)
+	var cur uint64
+	go func() {
+		for v := range progC {
+			cur += v
+			logger.Progress(float32(cur) / float32(total))
+		}
+	}()
+
+	if e := copyimg.CopyToSeeker(diskF, imgRes.Body, cpTasks, progC); e != nil {
+		return fmt.Errorf("during main copy operation: %v", e)
+	}
+	if e := imgRes.Body.Close(); e != nil {
+		log.Printf("WARNING: failed to close image (%v) after copy: %v", imgURL, e)
+	}
 
 	// TODO alignment of merged partitions!
 	// TODO check that image is equal on second read
@@ -149,8 +176,15 @@ func listen(logger *superlog.Logger) (pb.PowerControlType, error) {
 		return defaultPowerControl, e
 	}
 	logger.AttachSupervisor(c, cmd.SessionId)
-	defer logger.DetachSupervisor()
 	defer func() {
+		if r := recover(); r != nil {
+			if e, ok := r.(error); ok {
+				logger.Logf("recovered from panic: \n%v", e)
+			} else {
+				logger.Logf("recovered from panic: \n%v", r)
+			}
+		}
+		logger.DetachSupervisor()
 		_, e := c.RecordFinished(context.Background(), &pb.RecordFinishedRequest{
 			SessionId: cmd.SessionId,
 			Ok:        ok,

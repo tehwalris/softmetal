@@ -24,7 +24,12 @@ type Task struct {
 // CopyToSeeker fails if any source or target region is out of range.
 // When CopyToSeeker fails, the value of destination bytes is undefined.
 // Destination bytes which are not referenced by tasks never change (even after errors).
-func CopyToSeeker(dst io.WriteSeeker, src io.Reader, unsortedTasks []Task) error {
+// The number of bytes just copied (not the total until now) is sent
+// on the progress channel after each task is completed successfully.
+// CopyToSeeker will close the progress channel whether it completes sucessfully or not.
+func CopyToSeeker(dst io.WriteSeeker, src io.Reader, unsortedTasks []Task, progress chan<- uint64) error {
+	defer close(progress)
+
 	var tasks tasks
 	tasks.d = make([]Task, len(unsortedTasks))
 	copy(tasks.d, unsortedTasks)
@@ -63,6 +68,7 @@ func CopyToSeeker(dst io.WriteSeeker, src io.Reader, unsortedTasks []Task) error
 			return e
 		}
 		i += n
+		progress <- t.Size
 	}
 	return nil
 }
@@ -95,7 +101,7 @@ func (c tasks) Swap(i, j int) {
 // Only partition sizes from the source are used. Sizes of destination partitions are ignored.
 // The passed GPT tables are generally not validated (eg. for duplicate partitions).
 // Because of this, it is not guaranteed that copy tasks do not overlap.
-func PlanFromGPTs(src *gpt.Table, dst *gpt.Table) ([]Task, error) {
+func PlanFromGPTs(dst *gpt.Table, src *gpt.Table) ([]Task, error) {
 	var out []Task
 	for _, s := range src.Partitions {
 		if s.IsEmpty() {
@@ -118,4 +124,41 @@ func PlanFromGPTs(src *gpt.Table, dst *gpt.Table) ([]Task, error) {
 		}
 	}
 	return out, nil
+}
+
+// SplitTasks returns copy tasks which transfer the same data as the input tasks.
+// It tries to create around n output tasks, all of roughly equal size.
+// It does not guarantee that every task will be split, since that is not always possible.
+// SplitTasks panics for n < 1.
+func SplitTasks(tasks []Task, n int) []Task {
+	if n < 1 {
+		panic(fmt.Sprintf("got n = %v, want n < 1", n))
+	}
+	if n <= len(tasks) {
+		out := make([]Task, len(tasks))
+		copy(out, tasks)
+		return out
+	}
+
+	var total uint64
+	for _, t := range tasks {
+		total += t.Size
+	}
+	part := total / uint64(n)
+	if part == 0 {
+		part = 1
+	}
+	var out []Task
+	for _, t := range tasks {
+		for t.Size > part {
+			extra := t
+			extra.Size = part
+			out = append(out, extra)
+			t.Src += part
+			t.Dst += part
+			t.Size -= part
+		}
+		out = append(out, t)
+	}
+	return out
 }
