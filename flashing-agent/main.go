@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/jaypipes/ghw"
 	"github.com/rekby/gpt"
@@ -28,6 +29,8 @@ var managerHP = flag.String("manager", "", "host and GRPC port of flashing manag
 // gptBufferSize is the maximum number of bytes to load from
 // the start of the image for extracting the GPT.
 const gptBufferSize = 1000 * 1000
+const initialRetryCount = 10
+const initialRetryDelay = 5 * time.Second
 
 func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 	logger.Logf("Using disk with serial %v.", config.TargetDiskCombinedSerial)
@@ -164,8 +167,17 @@ func listen(logger *superlog.Logger) (pb.PowerControlType, error) {
 	var ok bool
 	var defaultPowerControl pb.PowerControlType
 
-	logger.Logf("connecting to manager: %v", *managerHP)
-	conn, e := grpc.Dial(*managerHP, grpc.WithInsecure())
+	var conn *grpc.ClientConn
+	var e error
+	for i := 0; i < initialRetryCount; i++ {
+		logger.Logf("connecting to manager: %v (attempt #%v)", *managerHP, i+1)
+		conn, e = grpc.Dial(*managerHP, grpc.WithInsecure(), grpc.WithBlock())
+		if e == nil {
+			break
+		}
+		logger.Logf("while connecting: %v", e)
+		time.Sleep(initialRetryDelay)
+	}
 	if e != nil {
 		return defaultPowerControl, e
 	}

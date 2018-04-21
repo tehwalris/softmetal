@@ -14,6 +14,7 @@ import (
 
 var httpListen = flag.String("http-listen", ":8080", "address and port to listen for HTTP on")
 var grpcListen = flag.String("grpc-listen", ":6781", "address and port to listen for GRPC on")
+var diskSerial = flag.String("disk-serial", "", "serial number of the target disk to flash (see agent logs) - example: Samsung_SSD_840_EVO_500GB_S1DHNSBF093723Z (required)")
 var imageURL = flag.String("image", "", "URL of the disk image to flash (required)")
 
 type supervisorServer struct {
@@ -26,7 +27,7 @@ func (s *supervisorServer) GetCommand(ctx context.Context, r *pb.Empty) (*pb.Fla
 	return &pb.FlashingCommand{
 		SessionId: sid,
 		Config: &pb.FlashingConfig{
-			TargetDiskCombinedSerial: "QEMU_HARDDISK_QM00001",
+			TargetDiskCombinedSerial: *diskSerial,
 			ImageConfig: &pb.FlashingConfig_ImageConfig{
 				Url:        *imageURL,
 				SectorSize: 512,
@@ -63,7 +64,7 @@ func check(e error) {
 
 func main() {
 	flag.Parse()
-	if *imageURL == "" {
+	if *imageURL == "" || *diskSerial == "" {
 		log.Fatalf("missing required arguments, see -help")
 	}
 
