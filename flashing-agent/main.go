@@ -101,7 +101,7 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 	if e := table.CreateOtherSideTable().Write(diskF); e != nil {
 		return fmt.Errorf("while writing disk-end GPT: %v", e)
 	}
-	if e := disk.WritePMBR(diskF, diskInfo.SizeBytes); e != nil {
+	if e := disk.WritePMBR(diskF, diskInfo.SectorSizeBytes, diskInfo.SizeBytes); e != nil {
 		return fmt.Errorf("while writing protective MBR: %v", e)
 	}
 
