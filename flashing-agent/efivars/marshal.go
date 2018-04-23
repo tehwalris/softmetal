@@ -132,7 +132,29 @@ func (t *BootEntry) Marshal() ([]byte, error) {
 // WARNING: UnmarshalBootEntry only loads the Description field.
 // Everything else is ignored (and not validated if possible)
 func UnmarshalBootEntry(d []byte) (*BootEntry, error) {
-	return nil, fmt.Errorf("not implemented")
+	descOffset := 4 /* EFI Var Attrs */ + 4 /* EFI_LOAD_OPTION.Attributes */ + 2 /*FilePathListLength*/
+	if len(d) < descOffset {
+		return nil, fmt.Errorf("too short: %v bytes", len(d))
+	}
+	descBytes := []byte{}
+	var foundNull bool
+	for i := descOffset; i+1 < len(d); i += 2 {
+		a := d[i]
+		b := d[i+1]
+		if a == 0 && b == 0 {
+			foundNull = true
+			break
+		}
+		descBytes = append(descBytes, a, b)
+	}
+	if !foundNull {
+		return nil, fmt.Errorf("didn't find null terminator for Description")
+	}
+	descDecoded, _, e := transform.Bytes(encoding.NewDecoder(), descBytes)
+	if e != nil {
+		return nil, fmt.Errorf("while decoding Description: %v", e)
+	}
+	return &BootEntry{Description: string(descDecoded)}, nil
 }
 
 // BootOrder represents the contents of the BootOrder EFI variable.
