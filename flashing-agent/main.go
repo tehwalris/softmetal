@@ -135,6 +135,8 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 		log.Printf("WARNING: failed to close image (%v) after copy: %v", imgURL, e)
 	}
 
+	// TODO check that boot entry is not nil
+
 	// TODO alignment of merged partitions!
 	// TODO check that image is equal on second read
 
