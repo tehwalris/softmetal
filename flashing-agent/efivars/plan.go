@@ -3,6 +3,10 @@ package efivars
 import (
 	"fmt"
 	"math"
+	"strings"
+
+	pb "git.dolansoft.org/philippe/softmetal/pb"
+	"github.com/rekby/gpt"
 )
 
 var softmetalEntryDesc = "Softmetal (boot from disk)"
@@ -42,11 +46,14 @@ func PlanUpdate(oldOrd BootOrder, oldEntries map[uint16]BootEntry, newEntry Boot
 			newID = k
 		}
 	}
-	for i := uint16(0); !foundID && i <= math.MaxUint16; i++ {
-		if _, prs := usedByID[i]; !prs {
+	for i := 0; !foundID && i <= math.MaxUint16; i++ {
+		if _, prs := usedByID[uint16(i)]; !prs {
 			foundID = true
 			newID = uint16(i)
 		}
+	}
+	if !foundID {
+		return nil, fmt.Errorf("no free boot entry IDs (%v boot entries exist)", len(oldEntries))
 	}
 
 	newOrd := BootOrder{newID}
@@ -57,4 +64,27 @@ func PlanUpdate(oldOrd BootOrder, oldEntries map[uint16]BootEntry, newEntry Boot
 	}
 
 	return &Update{Write: map[uint16]BootEntry{newID: newEntry}, Order: newOrd}, nil
+}
+
+// NewBootEntry creates a boot entry for softmetal by finding required
+// information about the target partition on disk. The partitions argument
+// should contain the final partitions stored on the disk, not the ones in the image.
+// NewBootEntry fills all fields of BootEntry except Description.
+func NewBootEntry(target *pb.FlashingConfig_BootEntry, partitions []gpt.Partition, diskGUID gpt.Guid) (*BootEntry, error) {
+	var mp *gpt.Partition
+	for i, p := range partitions {
+		if !p.IsEmpty() && strings.ToLower(p.Id.String()) == strings.ToLower(target.PartUuid) {
+			mp = &partitions[i]
+		}
+	}
+	if mp == nil {
+		return nil, fmt.Errorf(`target partition with UUID "%v" not found`, target.PartUuid)
+	}
+	return &BootEntry{
+		DiskGUID:        diskGUID,
+		Path:            target.Path,
+		PartitionNumber: 0,
+		PartitionStart:  mp.FirstLBA,
+		PartitionSize:   mp.LastLBA - mp.FirstLBA + 1,
+	}, nil
 }

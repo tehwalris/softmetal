@@ -12,10 +12,14 @@ service FlashingSupervisor {
 message Empty {}
 
 message FlashingConfig {
+  message BootEntry {
+    string path = 1;
+    string part_uuid = 2;
+  }
   message ImageConfig {
     string url = 1;
     uint32 sectorSize = 3;
-    string efi_loader_path = 4;
+    BootEntry boot_entry = 4;
   }
   message Partition {
     string part_uuid = 1;
