@@ -12,17 +12,10 @@ service FlashingSupervisor {
 message Empty {}
 
 message FlashingConfig {
-  message BootEntry {
-    /* TODO disk and partition should be relative to flashed image */
-    string efi_disk = 1;
-    uint32 efi_partition = 2;
-    string label = 3;
-    string loader_path = 4;
-  }
   message ImageConfig {
     string url = 1;
     uint32 sectorSize = 3;
-    BootEntry boot_entry = 2;
+    string efi_loader_path = 4;
   }
   message Partition {
     string part_uuid = 1;
