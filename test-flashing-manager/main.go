@@ -31,6 +31,9 @@ func (s *supervisorServer) GetCommand(ctx context.Context, r *pb.Empty) (*pb.Fla
 			ImageConfig: &pb.FlashingConfig_ImageConfig{
 				Url:        *imageURL,
 				SectorSize: 512,
+				BootEntry: &pb.FlashingConfig_BootEntry{
+					Path: `\xen-4.10.0.efi`,
+				},
 			},
 		},
 		PowerOnCompletion: pb.PowerControlType_POWER_OFF,

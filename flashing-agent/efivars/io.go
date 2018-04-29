@@ -36,7 +36,7 @@ func WriteBootOrder(ord BootOrder) error {
 // ReadBootEntries reads all existing EFI boot entries,
 // even if they are not in the boot order.
 func ReadBootEntries() (map[uint16]BootEntry, error) {
-	r := regexp.MustCompile("^Boot([0-9A-F]{4})-" + efiGlobalSuffix + "$")
+	r := regexp.MustCompile("^Boot([0-9A-F]{4})" + efiGlobalSuffix + "$")
 	entries, e := ioutil.ReadDir(efivarsPath)
 	if e != nil {
 		return nil, e
@@ -68,7 +68,7 @@ func ReadBootEntries() (map[uint16]BootEntry, error) {
 // It does not modify or delete any other boot entries.
 func WriteBootEntries(entries map[uint16]BootEntry) error {
 	for k, v := range entries {
-		p := path.Join(efivarsPath, fmt.Sprintf("Boot%4X%s", k, efiGlobalSuffix))
+		p := path.Join(efivarsPath, fmt.Sprintf("Boot%04X%s", k, efiGlobalSuffix))
 		d, e := v.Marshal()
 		if e != nil {
 			return e
@@ -78,4 +78,11 @@ func WriteBootEntries(entries map[uint16]BootEntry) error {
 		}
 	}
 	return nil
+}
+
+// IsEFIBooted checks that the machine is booted in EFI mode and
+// that the efivars filesystem is readable.
+func IsEFIBooted() bool {
+	_, e := ioutil.ReadDir(efivarsPath)
+	return e == nil
 }

@@ -32,8 +32,8 @@ var encoding = unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM)
 // BootEntry represents a subset of the contents of a Boot#### EFI variable.
 type BootEntry struct {
 	Description     string // eg. "Linux Boot Manager"
-	DiskGUID        gpt.Guid
 	Path            string // eg. `\EFI\systemd\systemd-bootx64.efi`
+	PartitionGUID   gpt.Guid
 	PartitionNumber uint32 // Starts with 1
 	PartitionStart  uint64 // LBA
 	PartitionSize   uint64 // LBA
@@ -45,7 +45,7 @@ type BootEntry struct {
 // as attributes of an EFI variable) are always set to LOAD_OPTION_ACTIVE.
 func (t *BootEntry) Marshal() ([]byte, error) {
 	if t.Description == "" ||
-		t.DiskGUID.String() == "00000000-0000-0000-0000-000000000000" ||
+		t.PartitionGUID.String() == "00000000-0000-0000-0000-000000000000" ||
 		t.Path == "" ||
 		t.PartitionNumber == 0 ||
 		t.PartitionStart == 0 ||
@@ -67,7 +67,7 @@ func (t *BootEntry) Marshal() ([]byte, error) {
 	dp = append32(dp, t.PartitionNumber)
 	dp = append64(dp, t.PartitionStart)
 	dp = append64(dp, t.PartitionSize)
-	dp = append(dp, t.DiskGUID[0:16]...) // Partition Signature
+	dp = append(dp, t.PartitionGUID[0:16]...) // Partition Signature
 	dp = append(dp,
 		0x02, // Partition Format ("GUID Partition Table")
 		0x02, // Signature Type ("GUID signature")

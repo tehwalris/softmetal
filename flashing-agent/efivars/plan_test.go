@@ -9,13 +9,12 @@ import (
 	"github.com/rekby/gpt"
 
 	"git.dolansoft.org/philippe/softmetal/flashing-agent/efivars"
-	pb "git.dolansoft.org/philippe/softmetal/pb"
 )
 
 func TestPlanUpdate(t *testing.T) {
 	typicalIn := efivars.BootEntry{
-		DiskGUID:        testUuids[1],
 		Path:            `\test\efi\path`,
+		PartitionGUID:   testUuids[1],
 		PartitionNumber: 3,
 		PartitionStart:  20,
 		PartitionSize:   123,
@@ -121,8 +120,8 @@ func TestPlanUpdate(t *testing.T) {
 			map[uint16]efivars.BootEntry{},
 			efivars.BootEntry{
 				Description:     "test description",
-				DiskGUID:        testUuids[1],
 				Path:            `\test\efi\path`,
+				PartitionGUID:   testUuids[1],
 				PartitionNumber: 3,
 				PartitionStart:  20,
 				PartitionSize:   123,
@@ -162,70 +161,59 @@ func TestPlanUpdate(t *testing.T) {
 }
 
 func TestNewBootEntry(t *testing.T) {
-	testPartition := gpt.Partition{
-		Type:     gpt.PartType(testUuids[2]),
-		Id:       testUuids[1],
-		FirstLBA: 12,
-		LastLBA:  220,
+	espType := gpt.PartType{0x28, 0x73, 0x2A, 0xC1, 0x1F, 0xF8, 0xD2, 0x11, 0xBA, 0x4B, 0x00, 0xA0, 0xC9, 0x3E, 0xC9, 0x3B}
+	bootEntry := func(idIdx int, num uint32, start uint64, size uint64) *efivars.BootEntry {
+		return &efivars.BootEntry{
+			Path:            `\test\path`,
+			PartitionGUID:   testUuids[idIdx],
+			PartitionNumber: num,
+			PartitionStart:  start,
+			PartitionSize:   size,
+		}
 	}
-	testDiskGuid := testUuids[5]
-	testBootEntry := efivars.BootEntry{
-		DiskGUID:        testDiskGuid,
-		Path:            `\test\path`,
-		PartitionNumber: 0,
-		PartitionStart:  12,
-		PartitionSize:   209,
+	partition := func(typeIdx int, idIdx int, firstLBA uint64, lastLBA uint64) gpt.Partition {
+		t := espType
+		if typeIdx != -1 {
+			t = gpt.PartType(testUuids[typeIdx])
+		}
+		return gpt.Partition{
+			Type:     t,
+			Id:       testUuids[idIdx],
+			FirstLBA: firstLBA,
+			LastLBA:  lastLBA,
+		}
 	}
+
 	cases := []struct {
 		label      string
-		target     pb.FlashingConfig_BootEntry
 		partitions []gpt.Partition
 		exp        *efivars.BootEntry
 		shouldFail bool
 	}{
-		{"single partition (matching)",
-			pb.FlashingConfig_BootEntry{Path: `\test\path`, PartUuid: testUuidStrings[1]},
-			[]gpt.Partition{testPartition},
-			&testBootEntry,
-			false},
-		{"single partition (not matching)",
-			pb.FlashingConfig_BootEntry{Path: `\test\path`, PartUuid: testUuidStrings[2]},
-			[]gpt.Partition{testPartition},
-			nil, true},
-		{"single partition (not matching because empty)",
-			pb.FlashingConfig_BootEntry{Path: `\test\path`, PartUuid: testUuidStrings[1]},
-			[]gpt.Partition{{
-				Type:     gpt.PartType(testUuids[0]),
-				Id:       testUuids[1],
-				FirstLBA: 12,
-				LastLBA:  220,
-			}},
-			nil, true},
-		{"ignores duplicate partitions in table",
-			pb.FlashingConfig_BootEntry{Path: `\test\path`, PartUuid: testUuidStrings[1]},
-			[]gpt.Partition{testPartition, testPartition},
-			&testBootEntry,
-			false},
-		{"multiple partitions (one matching)",
-			pb.FlashingConfig_BootEntry{Path: `\test\path`, PartUuid: testUuidStrings[1]},
-			[]gpt.Partition{
-				{Type: gpt.PartType(testUuids[2]),
-					Id:       testUuids[3],
-					FirstLBA: 30,
-					LastLBA:  50},
-				testPartition,
-				{Type: gpt.PartType(testUuids[2]),
-					Id:       testUuids[3],
-					FirstLBA: 200,
-					LastLBA:  400},
-			},
-			&testBootEntry,
-			false},
-		// TODO more cases
+		{"no partitions", []gpt.Partition{}, nil, true},
+		{"single partition (ESP)", []gpt.Partition{
+			partition(-1, 1, 20, 30),
+		}, bootEntry(1, 1, 20, 11), false},
+		{"multiple ESPs", []gpt.Partition{
+			partition(-1, 1, 20, 30),
+			partition(-1, 3, 40, 50),
+		}, nil, true},
+		{"typical", []gpt.Partition{
+			partition(2, 1, 20, 30),
+			partition(-1, 4, 25, 26),
+			partition(1, 4, 40, 50),
+		}, bootEntry(4, 2, 25, 2), false},
+		{"ignores overlap and duplicate IDs", []gpt.Partition{
+			partition(2, 1, 20, 40),
+			partition(-1, 4, 25, 26),
+			partition(1, 4, 10, 50),
+			partition(1, 4, 30, 42),
+		}, bootEntry(4, 2, 25, 2), false},
 	}
+
 	for _, c := range cases {
 		t.Run(c.label, func(t *testing.T) {
-			act, actErr := efivars.NewBootEntry(&c.target, c.partitions, testDiskGuid)
+			act, actErr := efivars.NewBootEntry(`\test\path`, c.partitions)
 			if c.shouldFail && actErr == nil {
 				t.Errorf("got no error, want some error")
 			}

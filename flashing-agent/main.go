@@ -18,6 +18,7 @@ import (
 
 	"git.dolansoft.org/philippe/softmetal/flashing-agent/copyimg"
 	"git.dolansoft.org/philippe/softmetal/flashing-agent/disk"
+	"git.dolansoft.org/philippe/softmetal/flashing-agent/efivars"
 	"git.dolansoft.org/philippe/softmetal/flashing-agent/partition"
 	"git.dolansoft.org/philippe/softmetal/flashing-agent/superlog"
 	pb "git.dolansoft.org/philippe/softmetal/pb"
@@ -29,11 +30,28 @@ var managerHP = flag.String("manager", "", "host and GRPC port of flashing manag
 // gptBufferSize is the maximum number of bytes to load from
 // the start of the image for extracting the GPT.
 const gptBufferSize = 1000 * 1000
+
 const initialRetryCount = 10
 const initialRetryDelay = 5 * time.Second
 
 func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
-	logger.Logf("Using disk with serial %v.", config.TargetDiskCombinedSerial)
+	if config.ImageConfig == nil {
+		return fmt.Errorf("FlashingConfig.ImageConfig is required")
+	}
+
+	isEFI := efivars.IsEFIBooted()
+	if !isEFI {
+		log.Printf("WARNING: machine not booted in EFI mode or efivars filesystem unavailable")
+	}
+
+	bootEnt := config.ImageConfig.BootEntry
+	if bootEnt == nil {
+		log.Printf("WARING: no boot entry specified in ImageConfig")
+	} else if !isEFI {
+		return fmt.Errorf("machine must be EFI booted to set boot entries")
+	}
+
+	logger.Logf("using disk with serial %v", config.TargetDiskCombinedSerial)
 	diskF, diskInfo, e := disk.OpenBySerial(config.TargetDiskCombinedSerial)
 	if e != nil {
 		return e
@@ -49,9 +67,9 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 		return e
 	}
 	if didCreateGpt {
-		logger.Logf("Using new blank GPT table (no table found on disk).")
+		logger.Logf("using new blank GPT table (no table found on disk)")
 	} else {
-		logger.Logf("Using existing GPT table from disk.")
+		logger.Logf("using existing GPT table from disk")
 	}
 	partition.PrintTable(table, logger, "Old GPT table from disk")
 
@@ -128,14 +146,50 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 		}
 	}()
 
-	if e := copyimg.CopyToSeeker(diskF, imgRes.Body, cpTasks, progC); e != nil {
-		return fmt.Errorf("during main copy operation: %v", e)
-	}
+	fmt.Sprintf("WARNING: skipping copy")
+	/*
+		if e := copyimg.CopyToSeeker(diskF, imgRes.Body, cpTasks, progC); e != nil {
+			return fmt.Errorf("during main copy operation: %v", e)
+		}
+	*/
 	if e := imgRes.Body.Close(); e != nil {
 		log.Printf("WARNING: failed to close image (%v) after copy: %v", imgURL, e)
 	}
 
-	// TODO check that boot entry is not nil
+	if bootEnt != nil {
+		logger.Logf("configuring boot entries")
+		oldOrd, e := efivars.ReadBootOrder()
+		if e != nil {
+			return fmt.Errorf("while reading boot order: %v", e)
+		}
+		oldEnts, e := efivars.ReadBootEntries()
+		if e != nil {
+			return fmt.Errorf("while reading boot entries: %v", e)
+		}
+		logger.Logf("old boot order: %04X", oldOrd)
+		logger.Logf("old boot entries:")
+		for k, v := range oldEnts {
+			logger.Logf(" %04X %v", k, v.Description)
+		}
+
+		newEnt, e := efivars.NewBootEntry(bootEnt.Path, table.Partitions)
+		if e != nil {
+			return fmt.Errorf("while creating boot entry in-memory: %v", e)
+		}
+
+		up, e := efivars.PlanUpdate(*oldOrd, oldEnts, *newEnt)
+		logger.Logf("boot config changes: %+v", up)
+
+		if e != nil {
+			return fmt.Errorf("while planning update: %v", e)
+		}
+		if e := efivars.WriteBootEntries(up.Write); e != nil {
+			return fmt.Errorf("while writing boot entries: %v", e)
+		}
+		if e := efivars.WriteBootOrder(up.Order); e != nil {
+			return fmt.Errorf("while writing boot order: %v", e)
+		}
+	}
 
 	// TODO alignment of merged partitions!
 	// TODO check that image is equal on second read

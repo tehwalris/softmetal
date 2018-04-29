@@ -14,7 +14,6 @@ message Empty {}
 message FlashingConfig {
   message BootEntry {
     string path = 1;
-    string part_uuid = 2;
   }
   message ImageConfig {
     string url = 1;

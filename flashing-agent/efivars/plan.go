@@ -5,11 +5,11 @@ import (
 	"math"
 	"strings"
 
-	pb "git.dolansoft.org/philippe/softmetal/pb"
 	"github.com/rekby/gpt"
 )
 
 var softmetalEntryDesc = "Softmetal (boot from disk)"
+var espGUIDStr = "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
 
 // Update specifies a set of modifications to EFI boot variables.
 type Update struct {
@@ -67,24 +67,31 @@ func PlanUpdate(oldOrd BootOrder, oldEntries map[uint16]BootEntry, newEntry Boot
 }
 
 // NewBootEntry creates a boot entry for softmetal by finding required
-// information about the target partition on disk. The partitions argument
+// information about the ESP partition on disk. The partitions argument
 // should contain the final partitions stored on the disk, not the ones in the image.
 // NewBootEntry fills all fields of BootEntry except Description.
-func NewBootEntry(target *pb.FlashingConfig_BootEntry, partitions []gpt.Partition, diskGUID gpt.Guid) (*BootEntry, error) {
-	var mp *gpt.Partition
+// If there are n != 1 ESP partitions, NewBootEntry fails.
+// ESP partitions are detected by their type: EFI System (see espGUIDStr).
+func NewBootEntry(path string, partitions []gpt.Partition) (*BootEntry, error) {
+	// TODO need to confirm that parition numbers on linux increment with empty entries in partition table
+
+	var targetIdx int
+	var found int
 	for i, p := range partitions {
-		if !p.IsEmpty() && strings.ToLower(p.Id.String()) == strings.ToLower(target.PartUuid) {
-			mp = &partitions[i]
+		if strings.ToLower(p.Type.String()) == strings.ToLower(espGUIDStr) {
+			targetIdx = i
+			found++
 		}
 	}
-	if mp == nil {
-		return nil, fmt.Errorf(`target partition with UUID "%v" not found`, target.PartUuid)
+	if found != 1 {
+		return nil, fmt.Errorf("found %v ESP partitions on disk, want exactly 1", found)
 	}
+	p := partitions[targetIdx]
 	return &BootEntry{
-		DiskGUID:        diskGUID,
-		Path:            target.Path,
-		PartitionNumber: 0,
-		PartitionStart:  mp.FirstLBA,
-		PartitionSize:   mp.LastLBA - mp.FirstLBA + 1,
+		Path:            path,
+		PartitionGUID:   p.Id,
+		PartitionNumber: uint32(targetIdx + 1),
+		PartitionStart:  p.FirstLBA,
+		PartitionSize:   p.LastLBA - p.FirstLBA + 1,
 	}, nil
 }
