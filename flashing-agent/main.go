@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"time"
 
 	"github.com/jaypipes/ghw"
@@ -194,6 +195,14 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 	return nil
 }
 
+func powerControl(t pb.PowerControlType) error {
+	cmd := "reboot"
+	if t == pb.PowerControlType_POWER_OFF {
+		cmd = "poweroff"
+	}
+	return exec.Command(cmd).Run()
+}
+
 func logSysinfo(logger *superlog.Logger) error {
 	bl, e := ghw.Block()
 	if e != nil {
@@ -280,7 +289,10 @@ func main() {
 	}
 
 	logger := superlog.New(log.New(os.Stderr, "", log.LstdFlags))
-	powerControl, e := listen(logger)
+	pcType, e := listen(logger)
 	logger.Logf("flashing error: %v", e)
-	logger.Logf("would power control: %v", powerControl)
+
+	if e := powerControl(pcType); e != nil {
+		logger.Logf("during power control: %v", e)
+	}
 }
