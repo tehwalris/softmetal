@@ -146,12 +146,9 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 		}
 	}()
 
-	fmt.Sprintf("WARNING: skipping copy")
-	/*
-		if e := copyimg.CopyToSeeker(diskF, imgRes.Body, cpTasks, progC); e != nil {
-			return fmt.Errorf("during main copy operation: %v", e)
-		}
-	*/
+	if e := copyimg.CopyToSeeker(diskF, imgRes.Body, cpTasks, progC); e != nil {
+		return fmt.Errorf("during main copy operation: %v", e)
+	}
 	if e := imgRes.Body.Close(); e != nil {
 		log.Printf("WARNING: failed to close image (%v) after copy: %v", imgURL, e)
 	}
