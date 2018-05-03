@@ -34,6 +34,7 @@ message FlashingConfig {
 enum PowerControlType {
   REBOOT = 0;
   POWER_OFF = 1;
+  REMAIN_ON = 2;
 }
 
 message FlashingCommand {

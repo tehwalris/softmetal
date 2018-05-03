@@ -196,6 +196,9 @@ func flash(logger *superlog.Logger, config *pb.FlashingConfig) error {
 }
 
 func powerControl(t pb.PowerControlType) error {
+	if t == pb.PowerControlType_REMAIN_ON {
+		return nil
+	}
 	cmd := "reboot"
 	if t == pb.PowerControlType_POWER_OFF {
 		cmd = "poweroff"

@@ -16,6 +16,7 @@ var httpListen = flag.String("http-listen", ":8080", "address and port to listen
 var grpcListen = flag.String("grpc-listen", ":6781", "address and port to listen for GRPC on")
 var diskSerial = flag.String("disk-serial", "", "serial number of the target disk to flash (see agent logs) - example: Samsung_SSD_840_EVO_500GB_S1DHNSBF093723Z (required)")
 var imageURL = flag.String("image", "", "URL of the disk image to flash (required)")
+var bootPath = flag.String("boot-path", "", "path to EFI bootloader on ESP in image (required)")
 
 type supervisorServer struct {
 	agentIDCounter uint64
@@ -31,12 +32,10 @@ func (s *supervisorServer) GetCommand(ctx context.Context, r *pb.Empty) (*pb.Fla
 			ImageConfig: &pb.FlashingConfig_ImageConfig{
 				Url:        *imageURL,
 				SectorSize: 512,
-				BootEntry: &pb.FlashingConfig_BootEntry{
-					Path: `\xen-4.10.0.efi`,
-				},
+				BootEntry:  &pb.FlashingConfig_BootEntry{Path: *bootPath},
 			},
 		},
-		PowerOnCompletion: pb.PowerControlType_POWER_OFF,
+		PowerOnCompletion: pb.PowerControlType_REMAIN_ON,
 	}, nil
 }
 
@@ -67,7 +66,7 @@ func check(e error) {
 
 func main() {
 	flag.Parse()
-	if *imageURL == "" || *diskSerial == "" {
+	if *imageURL == "" || *diskSerial == "" || *bootPath == "" {
 		log.Fatalf("missing required arguments, see -help")
 	}
 
