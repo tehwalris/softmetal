@@ -3,7 +3,7 @@ package disk
 import (
 	"fmt"
 
-	"github.com/jaypipes/ghw"
+	"github.com/tehwalris/ghw"
 )
 
 // FindDisk locates a disk with a specific serial number in ghw.BlockInfo.

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jaypipes/ghw"
+	"github.com/tehwalris/ghw"
 )
 
 // OpenBySerial finds a a disk by serial and returns its block device file and metadata.

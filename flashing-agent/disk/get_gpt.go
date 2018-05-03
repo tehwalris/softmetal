@@ -7,8 +7,8 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"github.com/jaypipes/ghw"
 	"github.com/rekby/gpt"
+	"github.com/tehwalris/ghw"
 )
 
 func createGpt(d *ghw.Disk) (*gpt.Table, error) {

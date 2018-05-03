@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jaypipes/ghw"
+	"github.com/tehwalris/ghw"
 )
 
 func TestFindDisk(t *testing.T) {

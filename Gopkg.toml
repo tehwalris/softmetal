@@ -30,7 +30,7 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/jaypipes/ghw"
+  name = "github.com/tehwalris/ghw"
 
 [[constraint]]
   branch = "master"

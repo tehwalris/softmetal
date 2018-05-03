@@ -14,8 +14,8 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/jaypipes/ghw"
 	"github.com/rekby/gpt"
+	"github.com/tehwalris/ghw"
 
 	"git.dolansoft.org/philippe/softmetal/flashing-agent/copyimg"
 	"git.dolansoft.org/philippe/softmetal/flashing-agent/disk"
@@ -212,9 +212,12 @@ func logSysinfo(logger *superlog.Logger) error {
 		return e
 	}
 	logger.Logf("block info: %v", bl.String())
-	logger.Logf("  disks: ")
-	for _, v := range bl.Disks {
-		logger.Logf("    %v", v.String())
+	logger.Logf("  disks:")
+	for _, d := range bl.Disks {
+		logger.Logf("    %v", d.String())
+		for _, p := range d.Partitions {
+			logger.Logf("      %v", p.String())
+		}
 	}
 	n, e := ghw.Network()
 	if e != nil {

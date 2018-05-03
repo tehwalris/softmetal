@@ -15,7 +15,7 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/jaypipes/ghw"
+  name = "github.com/tehwalris/ghw"
   packages = ["."]
   revision = "f5145c200b133a0768ce154da6f6a2feb21be4da"
 
