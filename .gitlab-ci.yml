@@ -15,7 +15,9 @@ before_script:
   - go get -u github.com/golang/protobuf/protoc-gen-go
   - go get -u google.golang.org/grpc
   - dep ensure -vendor-only
-  - go generate ./..
+  - cd flashing-agent
+  - go generate
+  - cd ..
 
 test:
   stage: test
