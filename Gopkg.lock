@@ -23,7 +23,7 @@
   branch = "master"
   name = "github.com/tehwalris/ghw"
   packages = ["."]
-  revision = "f5145c200b133a0768ce154da6f6a2feb21be4da"
+  revision = "686e6df69e663ce5050a47e56dbcf0969c5f7a18"
 
 [[projects]]
   branch = "master"

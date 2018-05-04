@@ -22,8 +22,8 @@ message FlashingConfig {
   }
   message Partition {
     string part_uuid = 1;
-    uint64 size = 2;
     string gpt_type = 3;
+    uint64 size = 2;
   }
 
   ImageConfig image_config = 1;

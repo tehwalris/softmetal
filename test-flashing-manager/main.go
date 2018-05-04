@@ -14,7 +14,7 @@ import (
 
 var httpListen = flag.String("http-listen", ":8080", "address and port to listen for HTTP on")
 var grpcListen = flag.String("grpc-listen", ":6781", "address and port to listen for GRPC on")
-var diskSerial = flag.String("disk-serial", "", "serial number of the target disk to flash (see agent logs) - example: Samsung_SSD_840_EVO_500GB_S1DHNSBF093723Z (required)")
+var machineName = flag.String("machine", "", "name of machine to flash (see machines.go, required)")
 var imageURL = flag.String("image", "", "URL of the disk image to flash (required)")
 var bootPath = flag.String("boot-path", "", "path to EFI bootloader on ESP in image (required)")
 
@@ -25,17 +25,16 @@ type supervisorServer struct {
 func (s *supervisorServer) GetCommand(ctx context.Context, r *pb.Empty) (*pb.FlashingCommand, error) {
 	sid := atomic.AddUint64(&s.agentIDCounter, 1)
 	log.Printf("SUPER %v: agent connected", sid)
+	c, _ := machines[*machineName]
+	c.ImageConfig = &pb.FlashingConfig_ImageConfig{
+		Url:        *imageURL,
+		SectorSize: 512,
+		BootEntry:  &pb.FlashingConfig_BootEntry{Path: *bootPath},
+	}
 	return &pb.FlashingCommand{
-		SessionId: sid,
-		Config: &pb.FlashingConfig{
-			TargetDiskCombinedSerial: *diskSerial,
-			ImageConfig: &pb.FlashingConfig_ImageConfig{
-				Url:        *imageURL,
-				SectorSize: 512,
-				BootEntry:  &pb.FlashingConfig_BootEntry{Path: *bootPath},
-			},
-		},
-		PowerOnCompletion: pb.PowerControlType_REMAIN_ON,
+		SessionId:         sid,
+		Config:            &c,
+		PowerOnCompletion: pb.PowerControlType_REBOOT,
 	}, nil
 }
 
@@ -66,8 +65,11 @@ func check(e error) {
 
 func main() {
 	flag.Parse()
-	if *imageURL == "" || *diskSerial == "" || *bootPath == "" {
+	if *imageURL == "" || *machineName == "" || *bootPath == "" {
 		log.Fatalf("missing required arguments, see -help")
+	}
+	if _, prs := machines[*machineName]; !prs {
+		log.Fatalf("no machine profile named %v", *machineName)
 	}
 
 	lis, e := net.Listen("tcp", *grpcListen)
