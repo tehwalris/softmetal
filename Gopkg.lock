@@ -4,8 +4,8 @@
 [[projects]]
   name = "github.com/golang/protobuf"
   packages = ["proto","ptypes","ptypes/any","ptypes/duration","ptypes/timestamp"]
-  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
-  version = "v1.0.0"
+  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/google/uuid"
@@ -15,15 +15,15 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/tehwalris/ghw"
-  packages = ["."]
-  revision = "f5145c200b133a0768ce154da6f6a2feb21be4da"
-
-[[projects]]
-  branch = "master"
   name = "github.com/rekby/gpt"
   packages = ["."]
   revision = "f2cbeebca98b6b541e4c441208a81b4c12b17925"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/tehwalris/ghw"
+  packages = ["."]
+  revision = "f5145c200b133a0768ce154da6f6a2feb21be4da"
 
 [[projects]]
   branch = "master"
@@ -33,7 +33,7 @@
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = ["collate","collate/build","internal/colltab","internal/gen","internal/tag","internal/triegen","internal/ucd","language","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
+  packages = ["collate","collate/build","encoding","encoding/internal","encoding/internal/identifier","encoding/unicode","internal/colltab","internal/gen","internal/tag","internal/triegen","internal/ucd","internal/utf8internal","language","runes","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
@@ -52,6 +52,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e86fdf036297df08c27b4e7cdfcc3f480e3fcbae95eed8d50bfdfa300d8a1a2b"
+  inputs-digest = "329a125c7ac4166627dc68bc0780a6aa05a4119125a0e9e02fa1b1c81269d1b3"
   solver-name = "gps-cdcl"
   solver-version = 1
